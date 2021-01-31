@@ -28,7 +28,7 @@ module Disks
       # @param data [String]
       def initialize(data)
         @dib = DiskInformationBlock.new data[0x00..0xff]
-        @data = data[0xff..data.length]
+        @data = data[0x100..data.length]
       end
 
       attr_reader :dib, :data
@@ -43,6 +43,11 @@ module Disks
 
       def to_s
         'MVDisk'
+      end
+
+      def track(num)
+        trange = @dib.track_range num
+        Track.new @data[trange.begin..trange.end - 0x100]
       end
     end
 
@@ -71,22 +76,32 @@ module Disks
       end
 
       def track_size
-        # Interpretar al string como 16-bit unsigned integer (S) big endian (>)
-        @data[0x32..0x33].unpack1 'S>'
+        @data[0x32..0x33].unpack1 'S<'
       end
 
       # Disk Information Block: Not used bytes.
       def not_used
         @data[0x34..0xff]
       end
+
+      # @return The track begining and ending position.
+      def track_range(num, offset = 0)
+        offset + track_size * (num - 1)..offset + track_size * num
+      end
     end
 
     # Track class
     class Track
       def initialize(data)
-        sil_end = TrackInformationBlock.sil_end data
-        @tib = TrackInformationBlock.new data[0x00..sil_end]
-        @data = data[sil_end..data.length]
+        tib_end = TrackInformationBlock.tib_end data
+        @tib = TrackInformationBlock.new data[0x00..tib_end]
+        @data = data[tib_end..data.length]
+      end
+
+      attr_reader :tib, :data
+
+      def inspect
+        "#<Track number=#{@tib.number} side=#{@tib.side}>"
       end
     end
 
@@ -96,29 +111,31 @@ module Disks
         @data = data
       end
 
+      attr_reader :data
+
       def descriptor
         @data[0x00..0x0c]
       end
 
       # Track number
       def number
-        @data[0x10]
+        @data[0x10].unpack1('C') + 1
       end
 
       def side
-        @data[0x11]
+        @data[0x11].unpack1('C') + 1
       end
 
       def sector_size
-        @data[0x14]
+        @data[0x14].unpack1 'C'
       end
 
       def sector_count
-        @data[0x15]
+        @data[0x15].unpack1 'C'
       end
 
       def gap_3_length
-        @data[0x16]
+        @data[0x16].unpack1 'C'
       end
 
       def filler_byte
@@ -152,6 +169,24 @@ module Disks
         init = 0x18 + (num - 1) * 0x07
         ending = 0x18 + num * 0x07
         SectorInformationBlock.new @data[init..ending]
+      end
+
+      class << self
+        # Where is the Track Information Block ending address?
+        #
+        # The Track Information Block depends on the sector count, which is specified
+        # at the 0x15 byte. Retrieve this information from the data and calculate the
+        # ending address of the information block.
+        #
+        # @param data [String] The data used for initializing the
+        #   TrackInformationBlock instance. The 0x00 address is the starting address
+        #   for the information block.
+        # @return [Integer] The address where the Track Information Block ends.
+        def tib_end(data)
+          sector_count = data[0x15].unpack1 'C'
+          # Track information is up to 0x18. Sector Information List is from 0x18.
+          0x18 + sector_count * 0x07
+        end
       end
     end
 
