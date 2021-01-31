@@ -103,6 +103,11 @@ module Disks
       def inspect
         "#<Track number=#{@tib.number} side=#{@tib.side}>"
       end
+
+      def sector(num)
+        srange = @tib.sector_range num
+        Sector.new @tib.sib(num), @data[srange]
+      end
     end
 
     # Track Information Block
@@ -127,7 +132,7 @@ module Disks
       end
 
       def sector_size
-        @data[0x14].unpack1 'C'
+        @data[0x14].unpack1('C') * 270
       end
 
       def sector_count
@@ -171,6 +176,12 @@ module Disks
         SectorInformationBlock.new @data[init..ending]
       end
 
+      def sector_range(num)
+        sbegin = sector_size * (num - 1)
+        send = sbegin + sector_size
+        sbegin..send
+      end
+
       class << self
         # Where is the Track Information Block ending address?
         #
@@ -201,8 +212,10 @@ module Disks
       # @param data [String]
       def initialize(sib, data)
         @sib = sib
-        @data = data[0x00..@sib.size]
+        @data = data[0x00..data.length]
       end
+
+      attr_reader :sib, :data
     end
 
     # Sector Information Block
@@ -225,22 +238,22 @@ module Disks
 
       # Track number where the sector is.
       def track
-        @data[0x00]
+        @data[0x00].unpack1('C') + 1
       end
 
       # Side of the disk where the sector is.
       def side
-        @data[0x01]
+        @data[0x01].unpack1('C') + 1
       end
 
       # Sector ID
       def sector_id
-        @data[0x02]
+        @data[0x02].unpack1 'C'
       end
 
       # Sector size
       def size
-        @data[0x03]
+        @data[0x03].unpack1 'C'
       end
 
       # FDC status register 1 and 2.
