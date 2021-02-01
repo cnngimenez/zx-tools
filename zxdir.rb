@@ -19,7 +19,7 @@
 
 # The ZX Directory and DirectoryEntry
 #
-# Implemented according the CPCWiki.
+# Implemented according the CPCWiki at http://www.cpcwiki.eu/index.php/Disk_structure
 module Zxdir
   # The ZX Media Directory.
   #

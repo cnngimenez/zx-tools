@@ -18,6 +18,9 @@
 # frozen_string_literal: true
 
 module Disks
+  # MV CPC Disk image file format.
+  #
+  # Implemented according to http://cpctech.cpcwiki.de/docs/dsk.html
   module MV
     # MV Disk class.
     #
