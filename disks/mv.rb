@@ -1,4 +1,3 @@
-# coding: utf-8
 # Copyright 2021 Christian Gimenez
 #
 # mv.rb
@@ -41,8 +40,8 @@ module Disks
         end
       end
 
-      def to_s
-        'MVDisk'
+      def inspect
+        '#<MVDisk>'
       end
 
       def track(num)
@@ -101,12 +100,46 @@ module Disks
       attr_reader :tib, :data
 
       def inspect
-        "#<Track number=#{@tib.number} side=#{@tib.side}>"
+        "#<Track @number=#{@tib.number} @side=#{@tib.side}>"
       end
 
-      def sector(num)
+      def sector_num(num)
         srange = @tib.sector_range num
         Sector.new @tib.sib(num), @data[srange]
+      end
+
+      def sector_range(range)
+        lst = []
+        range.each do |num|
+          lst.append sector_num num
+        end
+        lst
+      end
+
+      def sector(range_or_num)
+        if range_or_num.is_a? Integer
+          sector_num range_or_num
+        elsif range_or_num.is_a? Range
+          sector_range range_or_num
+        end
+      end
+
+      # Return the sector data without the filler byte.
+      #
+      # @return [String] The sector data without the filler byte.
+      def sector_data1(num)
+        s = sector num
+        s.data_without_filler @tib.filler_byte
+      end
+
+      # Return sector data without the filler byte
+      #
+      # @return [Array] An array of strings with the sector data.
+      def sector_data(sector_range)
+        sectors = sector sector_range
+        sectors.map do |s|
+          s.data_without_filler @tib.filler_byte
+        end
       end
     end
 
@@ -216,6 +249,26 @@ module Disks
       end
 
       attr_reader :sib, :data
+
+      # Return the last data index without considering the filler byte.
+      #
+      # @param filler_byte [String] A one byte string with the filler byte.
+      # @return [Integer] -1 if no data is in the sector. The data index where the
+      #   last byte of information is.
+      def last_data_index(filler_byte)
+        fb = filler_byte.unpack 'C'
+        i = @data.length - 1
+        i -= 1 while i >= 0 && @data[i].unpack('C') == fb
+        i
+      end
+
+      # Return the data without any filler bytes at the end.
+      def data_without_filler(filler_byte)
+        last_index = last_data_index filler_byte
+        return '' unless last_index >= 0
+
+        @data[0..last_index]
+      end
     end
 
     # Sector Information Block
