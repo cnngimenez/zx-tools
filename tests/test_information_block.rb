@@ -22,18 +22,29 @@ require 'information_block'
 
 class TestSectorInformationBlock2 < Minitest::Test
   def setup
+    @dibbin = "MV - CPCEMU Disk-File\r\nDisk-Info\r\n" +
+              "\0\0\0\0\0\0\0\0\0\0\0\0\0\0" +
+              "\x28\x01\x00\x13" +
+              "\0" * 204
+    @dibbin2 = "MV - CPCEMU Disk-File\r\nDisk-Info\r\n" +
+               "WHO\0\0\0\0\0\0\0\0\0\0\0" +
+               "\x29\x02\x01\x13" +
+               "\0" * 204    
     @dib = Disks::MV2::DiskInformationBlock.new
     @tib = Disks::MV2::TrackInformationBlock.new
     @sib = Disks::MV2::SectorInformationBlock.new
   end
 
   def test_dib_defaults
-    dibbin = "MV - CPCEMU Disk-File\r\nDisk-Info\r\n" +
-             "\0\0\0\0\0\0\0\0\0\0\0\0\0\0" +
-             "\x28\x01\x00\x13" +
-             "\0" * 204
-    assert_equal 256, dibbin.length 
-    assert_equal dibbin, @dib.to_bin
+    assert_equal @dibbin, @dib.to_bin
+  end
+
+  def test_dib_from_bin
+    dib = Disks::MV2::DiskInformationBlock.from_bin @dibbin2
+    assert_equal 'WHO', dib.creator_name
+    assert_equal 41, dib.track_count, 41
+    assert_equal 2, dib.side_count
+    assert_equal 4865, dib.track_size
   end
   
 end

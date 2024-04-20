@@ -40,6 +40,22 @@ module Disks
          @track_count, @side_count,
          @track_size].pack 'A34A14CCS<x204'
       end
+
+      class << self
+        # Parse a binary string into a DiskInformationBlock instance.
+        #
+        # Interpret the binary data into a disk information block fields.
+        #
+        # @param str [String] A binary String.
+        #
+        # @return DiskInformationBlock instance.
+        def from_bin(str)
+          dib = DiskInformationBlock.new
+          dib.descriptor, dib.creator_name, dib.track_count,
+          dib.side_count, dib.track_size = str.unpack 'A34A14CCS<x204'
+          dib
+        end
+      end
     end
 
     class TrackInformationBlock
@@ -55,9 +71,8 @@ module Disks
         @sib_list = SectorInformationBlock.create_empty_list 9
       end
 
-      attr_accessor :descriptor, :number, :side, :sector_size, :gap_3_length, :filler_byte
-
-      attr_reader :sib_list
+      attr_accessor :descriptor, :number, :side, :sector_size,
+                    :gap_3_length, :filler_byte, :sib_list
 
       def sector_count
         @sib_list.length
@@ -78,6 +93,31 @@ module Disks
          sector_count,
          @gap_3_length, @filler_byte,
          sib_bin].pack 'A13x3CCx2CCCCA*'
+      end
+
+      class << self
+        # Parse a binary string into a DiskInformationBlock instance.
+        #
+        # Interpret the binary data into a disk information block fields.
+        #
+        # @param str [String] A binary String.
+        #
+        # @return DiskInformationBlock instance.
+        def from_bin(str)
+          tib = TrackInformationBlock.new
+          tib.descriptor, number, side,
+          sector_size,
+          tib.sector_count,
+          tib.gap_3_length, tib.filler_byte, sib_bin = str.unpack 'A13x3CCx2CCCCA*'
+
+          tib.number = number + 1
+          tib.side = side + 1
+          tib.sector_size = sector_size * 256
+
+          tib.sib_list = SectorInformationBlock.from_lst_bin sib_bin
+
+          tib
+        end
       end
     end
 
@@ -107,6 +147,26 @@ module Disks
             lst.push sib
           end
 
+          lst
+        end
+
+        def from_bin(str)
+          sib = SectorInformationBlock.new
+
+          track, side, sib.sector_id, size, fdc0, fdc1 = str.unpack 'CCCCCCx2'
+          sib.track = track + 1
+          sib.side = side + 1
+          sib.size = size * 256
+          sib.fdc = [fdc0, fdc1]
+
+          sib
+        end
+
+        def from_lst_bin(str)
+          lst = []
+          (str.length / 8).times do |sibbin|
+            lst.push SectorInformationBlock.from_bin sibbin
+          end
           lst
         end
       end
