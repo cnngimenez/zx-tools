@@ -1,0 +1,12 @@
+* License
+This work is under the GNU General Public License version 3 (GPLv3) except where specified.
+
+The source code of the program CLOCK.BAS inside the disk file tests/data/manual.dsk, is the Clock program which source code where obtained from The Sinclair ZX Spectrum +3 manual, copyright Amstrad Plc. The manual was found at:
+
+https://worldofspectrum.net/ZXSpectrum128+3Manual/index.html
+
+The Basic source code of Clock can be found at Chapter 8 Part 33, under the following URL:
+
+https://worldofspectrum.net/ZXSpectrum128+3Manual/chapter8pt33.html
+
+Both URL were available and visited on April 20, 2024.
