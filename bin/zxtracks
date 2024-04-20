@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+
+# Copyright 2024 Christian Gimenez
+#
+# zxtracks
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# frozen_string_literal: true
+
+require_relative '../source/disks'
+
+if ARGV.empty?
+  puts 'List tracks in a disk file.\n'
+  puts 'Disk file required\n'
+  puts 'Synopsis:'
+  puts '          zktracks DISKFILE'
+  exit
+end
+
+def show_tib(tib)
+  puts "-- Track Info --"
+  puts "Number: #{tib.number}"
+  puts "Side: #{tib.side}"
+  puts "Sector size: #{tib.sector_size}"
+  puts "Sector count: #{tib.sector_count}"
+end
+
+@d = Disks::MV::MVDisk.from_file ARGV[0]
+track_count = @d.dib.track_count
+side_count = @d.dib.side_count
+track_size = @d.dib.track_size
+
+puts "Disk has #{side_count} side/s, with #{track_count} track/s."
+puts "Track size is #{track_size} bytes."
+
+track_count.times do |num|
+  show_tib  @d.track(num + 1).tib
+end
