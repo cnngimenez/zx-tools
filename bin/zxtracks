@@ -35,6 +35,8 @@ def show_tib(tib)
   puts "Side: #{tib.side}"
   puts "Sector size: #{tib.sector_size}"
   puts "Sector count: #{tib.sector_count}"
+  puts "GAP3 length: #{tib.gap_3_length}"
+  puts "Filler byte: #{tib.filler_byte.inspect}"
 end
 
 @d = Disks::MV::MVDisk.from_file ARGV[0]
