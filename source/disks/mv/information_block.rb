@@ -80,10 +80,8 @@ module Disks
 
       # Return the binary of the sector information block list.
       def sib_bin
-        binlst = @sib_list.map do |sib|
-          sib.to_bin
-        end
-        binlst.pack 'A*'
+        binlst = @sib_list.map(&:to_bin)
+        binlst.join
       end
 
       def to_bin
@@ -92,7 +90,7 @@ module Disks
          @sector_size / 256,
          sector_count,
          @gap_3_length, @filler_byte,
-         sib_bin].pack 'A13x3CCx2CCCCA*'
+         sib_bin].pack 'A13x3CCx2CCCA1a*'
       end
 
       class << self
@@ -105,10 +103,11 @@ module Disks
         # @return DiskInformationBlock instance.
         def from_bin(str)
           tib = TrackInformationBlock.new
+
+          # sector_count is not parsed!
           tib.descriptor, number, side,
           sector_size,
-          tib.sector_count,
-          tib.gap_3_length, tib.filler_byte, sib_bin = str.unpack 'A13x3CCx2CCCCA*'
+          tib.gap_3_length, tib.filler_byte, sib_bin = str.unpack 'A13x3CCx2CxCA1a*'
 
           tib.number = number + 1
           tib.side = side + 1
@@ -156,7 +155,7 @@ module Disks
           track, side, sib.sector_id, size, fdc0, fdc1 = str.unpack 'CCCCCCx2'
           sib.track = track + 1
           sib.side = side + 1
-          sib.size = size * 256
+          sib.sector_size = size * 256
           sib.fdc = [fdc0, fdc1]
 
           sib
@@ -164,8 +163,10 @@ module Disks
 
         def from_lst_bin(str)
           lst = []
-          (str.length / 8).times do |sibbin|
-            lst.push SectorInformationBlock.from_bin sibbin
+          (str.length / 8).times do |index|
+            istart = index * 8
+            iend = istart + 8
+            lst.push SectorInformationBlock.from_bin str[istart..iend]
           end
           lst
         end
