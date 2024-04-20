@@ -1,0 +1,187 @@
+
+* Disk image
+The dsk format is a hardware representation. A disk is divided in sides, which in turn it has tracks and each track has sectors.
+
+- sides
+  - tracks
+    - sectors
+
+
+On the file image, each track and each sector has a header or an "information block". It describes their representation. For instance, the track/sector size, the current track and side number, etc. The track information block is at the begining of each track, but the sector information block is inside the information block (not at the begining of the sector).
+
+** Implementation Conventions
+A disk block or structure is represented as a class. It has a =@data= attribute which contains the complete binary information. The data type used to store binary information is a String (not an Array instance). The =#unpack= method that String class possess is useful to convert bytes into integer, real, or other Ruby values. Also, several methods are implemented for each field the structure has, that access directly to the =@data= attribute at the specific offset simply by using indexing techniques.
+
+For instance, the information block is implemented as =Disks::MV::DiskInformationBlock= class. Its =@data= contains all the 256 bytes of information block. A method =#creator_name= is implemented to access to =@data= from byte number 22_{16} to number 2f_{16}. The creator name is a string, and thus no data type conversion is required. However, =#track_size= and =#track_count= methods are implemented to convert its bytes into a Ruby integer value.
+
+The *number conventions* are the following:
+
+- Track number starts with 1. In binary data starts with 0;
+- Side number starts with 1. In binary data starts with 0;
+- Sector id number starts with 1. In binary data starts with 1.
+
+** Information Block
+The Information Block is the first structure found on a disk file. To identify it from other files, the MV String first 8 bytes can be used, which is "MV - CPC". The complete MV String is: ="MV - CPCEMU Disk-File\r\nDisk-Info\r\n"= (without ending zero char).
+
+The block structure is described at Table [[tab:info-block]]. Its size is 256 (100_{16}) bytes, which it starts at byte 0, and ends at byte 100_{16}
+
+#+name: tab:info-block
+#+caption: Information block structure. [[https://cpctech.cpcwiki.de/docs/dsk.html][Obtained from CPCWiki]].
+| offset | description      | bytes |
+|--------+------------------+-------|
+|  00-21 | MV String        |    34 |
+|  22-2f | name of creator  |    14 |
+|     30 | number of tracks |     1 |
+|     31 | number of sides  |     1 |
+|  32-33 | size of track    |     2 |
+|  34-ff | not used         |   204 |
+
+
+The disk information block is represented by the class =Disks::MV::DiskInformationBlock=. 
+
+** Track information block
+
+The *Track String* is "Track-Info\r\n\0". Comparing to the MV String of a Disk Information Block, in this case a zero character must be added to the end, to complete the field length of 13 bytes. 
+
+The *sector size* field size is 1 byte. Therefore, it is a number between 0 to 255, which it cannot specify the complete size in bytes of the sector. This byte value must be multiplied by 256 according to CPCWiki (see [[https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format&mobileaction=toggle_view_desktop][CPCWiki article]]).
+
+A *Sector Information Block* (SIB) is an 8 byte register that describe the sector size. It can be used to calculate the sector position relative to the track.
+
+#+caption: Track information block structure. [[https://cpctech.cpcwiki.de/docs/dsk.html][Obtained from CPCWiki]].
+| offset | description             | bytes |
+|--------+-------------------------+-------|
+|  00-0c | Track String            |    13 |
+|  0d-0f | unused                  |     3 |
+|     10 | track number            |     1 |
+|     11 | side number             |     1 |
+|  12-13 | unused                  |     2 |
+|     14 | sector size             |     1 |
+|     15 | number of sectors       |     1 |
+|     16 | GAP3 length             |     1 |
+|     17 | filler byte             |     1 |
+|  18-xx | Sector information list |    xx |
+
+The track information block is represented by the class =Disks::MV:TrackInformationBlock=. The track itself is another class: =Disks::MV::Track=.
+
+** Sector info
+
+#+caption: Sector information block structure. [[https://cpctech.cpcwiki.de/docs/dsk.html][Obtained from CPCWiki]].
+| offset | description           | bytes |
+|--------+-----------------------+-------|
+|     00 | track                 |     1 |
+|     01 | side                  |     1 |
+|     02 | sector ID             |     1 |
+|     03 | sector size           |     1 |
+|     04 | FDC status register 1 |     1 |
+|     05 | FDC status register 2 |     1 |
+|  06-07 | not used              |     2 |
+
+The track information block is represented by the class =Disks::MV:SectorInformationBlock=. The sector itself is another class: =Disks::MV::Sector=.
+
+* Directory
+
+The directory is a list of files positioned at the begining of the disk (at track 2 usually). Each directory entry has 32 bytes with the following meaning:
+
+#+caption: 
+|   | Bytes | 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | A  | B  | C  | D  | E  | F  |
+|---+-------+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----|
+| / | >     | <  |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |
+|   |       | St | F0 | F1 | F2 | F3 | F4 | F5 | F6 | F7 | E0 | E1 | E2 | Xl | Bc | Xh | Rc |
+|   |       | Al | Al | Al | Al | Al | Al | Al | Al | Al | Al | Al | Al | Al | Al | Al | Al |
+
+- St :: The status value and file's user number.
+- F0-F7 :: The file name and file attributes at the highest bit of each byte.
+- E0-E2 :: The file extension and file attributes at the highest bit of each byte.
+- Xl :: Extent number, lower byte.
+- Bc :: Number of bytes used in last record.
+- Xh :: Extent number, higher byte.
+- Rc :: Number of 128 byte records of the last used logical extent.
+- Al :: 16 bytes of Block pointers.
+
+See the [[https://www.cpcwiki.eu/index.php/Disk_structure][Disk Structure article at CPCWiki]] for more information.
+
+* Blocks
+The data (without headers) is divided by blocks. The block size can be 1024, 2048, 4096, 8192 or 16384, but the usual value is 2048.
+
+
+* Bibliography
+
+- "Disk image file format". CPCWiki document.
+
+  https://cpctech.cpcwiki.de/docs/dsk.html
+
+  Visited April 19, 2024.
+  
+- "Format:DSK disk image file format". CPCWiki article.
+  
+  https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format
+
+  Visited April 19, 2024.
+    
+- "Disk Structure". CPCWiki.
+
+  https://www.cpcwiki.eu/index.php/Disk_structure
+
+  Visited April 19, 2024.
+    
+
+
+* Meta     :noexport:
+
+# ----------------------------------------------------------------------
+#+TITLE:  DSK-structure
+#+AUTHOR: Christian Gimenez
+#+DATE:   02 feb 2021
+#+EMAIL:
+#+DESCRIPTION: 
+#+KEYWORDS: 
+
+#+STARTUP: inlineimages hidestars content hideblocks entitiespretty
+#+STARTUP: indent fninline latexpreview
+
+#+OPTIONS: H:3 num:t toc:t \n:nil @:t ::t |:t ^:{} -:t f:t *:t <:t
+#+OPTIONS: TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+OPTIONS: tex:imagemagick
+
+#+TODO: TODO(t!) CURRENT(c!) PAUSED(p!) | DONE(d!) CANCELED(C!@)
+
+# -- Export
+#+LANGUAGE: en
+#+LINK_UP:   
+#+LINK_HOME: 
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+
+# -- HTML Export
+#+INFOJS_OPT: view:info toc:t ftoc:t ltoc:t mouse:underline buttons:t path:libs/org-info.js
+#+HTML_LINK_UP: index.html
+#+HTML_LINK_HOME: index.html
+#+XSLT:
+
+# -- For ox-twbs or HTML Export
+# #+HTML_HEAD: <link href="libs/bootstrap.min.css" rel="stylesheet">
+# -- -- LaTeX-CSS
+# #+HTML_HEAD: <link href="css/style-org.css" rel="stylesheet">
+
+# #+HTML_HEAD: <script src="libs/jquery.min.js"></script> 
+# #+HTML_HEAD: <script src="libs/bootstrap.min.js"></script>
+
+
+# -- LaTeX Export
+# #+LATEX_CLASS: article
+# -- -- Tikz
+# #+LATEX_HEADER: \usepackage{tikz}
+# #+LATEX_HEADER: \usetikzlibrary{shapes.geometric}
+# #+LATEX_HEADER: \usetikzlibrary{shapes.symbols}
+# #+LATEX_HEADER: \usetikzlibrary{positioning}
+# #+LATEX_HEADER: \usetikzlibrary{trees}
+
+# #+LATEX_HEADER_EXTRA:
+
+# Local Variables:
+# org-hide-emphasis-markers: t
+# org-use-sub-superscripts: "{}"
+# fill-column: 80
+# visual-line-fringe-indicators: t
+# ispell-local-dictionary: "british"
+# End:
