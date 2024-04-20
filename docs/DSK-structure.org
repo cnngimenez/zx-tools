@@ -20,10 +20,12 @@ The *number conventions* are the following:
 - Side number starts with 1. In binary data starts with 0;
 - Sector id number starts with 1. In binary data starts with 1.
 
-** Information Block
+** Disk Information Block (DIB)
 The Information Block is the first structure found on a disk file. To identify it from other files, the MV String first 8 bytes can be used, which is "MV - CPC". The complete MV String is: ="MV - CPCEMU Disk-File\r\nDisk-Info\r\n"= (without ending zero char).
 
 The block structure is described at Table [[tab:info-block]]. Its size is 256 (100_{16}) bytes, which it starts at byte 0, and ends at byte 100_{16}
+
+The *size of track* filed is expressed with little-endian representation. Thus, low byte is followed by the high byte. Its usual value is 4864 bytes (="\x00\x13"= as a Ruby string).
 
 #+name: tab:info-block
 #+caption: Information block structure. [[https://cpctech.cpcwiki.de/docs/dsk.html][Obtained from CPCWiki]].
@@ -39,13 +41,19 @@ The block structure is described at Table [[tab:info-block]]. Its size is 256 (1
 
 The disk information block is represented by the class =Disks::MV::DiskInformationBlock=. 
 
-** Track information block
+** Track information block (TIB)
 
 The *Track String* is "Track-Info\r\n\0". Comparing to the MV String of a Disk Information Block, in this case a zero character must be added to the end, to complete the field length of 13 bytes. 
 
-The *sector size* field size is 1 byte. Therefore, it is a number between 0 to 255, which it cannot specify the complete size in bytes of the sector. This byte value must be multiplied by 256 according to CPCWiki (see [[https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format&mobileaction=toggle_view_desktop][CPCWiki article]]).
+The *sector size* field size is 1 byte. Therefore, it is a number between 0 to 255, which it cannot specify the complete size in bytes of the sector. This byte value must be multiplied by 256 according to CPCWiki (see [[https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format&mobileaction=toggle_view_desktop][CPCWiki article]]). The usual value is 2 (512 bytes).
 
-A *Sector Information Block* (SIB) is an 8 byte register that describe the sector size. It can be used to calculate the sector position relative to the track.
+The *number of sectors* is represented as =sector_count= identifier in the implementation. Its usual value is 9.
+
+Also, the *GAP3 length* can be found as =gap_3_length= in the implementation. The common value is 78.
+
+The *filler byte* is an example of the byte used to fill the track when there is no information in it. In other words, it indicates that that byte is empty. The track structure has the size indicated by the DIB structure. Thus, all the bytes are completely reserved in the file, whether it is with information or with a filler byte.
+
+The *sector information list* has one Sector Information Block structure per number of sectors. A *Sector Information Block* (SIB) is an 8 byte register that describes the sector. It has the sector size which can be used to calculate the sector position relative to the current track.
 
 #+caption: Track information block structure. [[https://cpctech.cpcwiki.de/docs/dsk.html][Obtained from CPCWiki]].
 | offset | description             | bytes |
@@ -63,7 +71,7 @@ A *Sector Information Block* (SIB) is an 8 byte register that describe the secto
 
 The track information block is represented by the class =Disks::MV:TrackInformationBlock=. The track itself is another class: =Disks::MV::Track=.
 
-** Sector info
+** Sector Information Block (SIB)
 
 #+caption: Sector information block structure. [[https://cpctech.cpcwiki.de/docs/dsk.html][Obtained from CPCWiki]].
 | offset | description           | bytes |

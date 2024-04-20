@@ -120,9 +120,10 @@ module Disks
       end
 
       def sector(range_or_num)
-        if range_or_num.is_a? Integer
+        case range_or_num.class
+        when Integer
           sector_num range_or_num
-        elsif range_or_num.is_a? Range
+        when Range
           sector_range range_or_num
         end
       end
@@ -168,7 +169,7 @@ module Disks
       end
 
       def sector_size
-        @data[0x14].unpack1('C') * 270
+        @data[0x14].unpack1('C') * 256
       end
 
       def sector_count
@@ -207,8 +208,8 @@ module Disks
       # @param num [Integer] Sector number (first sector is 1, not 0).
       # @return [SectorInformationBlock]
       def sib(num)
-        init = 0x18 + (num - 1) * 0x07
-        ending = 0x18 + num * 0x07
+        init = 0x18 + (num - 1) * 0x08
+        ending = init + 7
         SectorInformationBlock.new @data[init..ending]
       end
 
@@ -277,13 +278,14 @@ module Disks
     # Sector Information Block
     class SectorInformationBlock
       STATUS_REG_1 = {
-        0Xb7 => 'End of cylinder',
+        0xb7 => 'End of cylinder',
         0xb5 => 'Data error',
         0xb2 => 'No data',
         0xb0 => 'Missing address mark'
       }.freeze
+
       STATUS_REG_2 = {
-        0Xb5 => 'Control mark or data error in data field',
+        0xb5 => 'Control mark or data error in data field',
         0xb0 => 'Missing address mark in data field'
       }.freeze
 
@@ -291,6 +293,8 @@ module Disks
       def initialize(data)
         @data = data
       end
+
+      attr_reader :data
 
       # Track number where the sector is.
       def track
@@ -304,12 +308,12 @@ module Disks
 
       # Sector ID
       def sector_id
-        @data[0x02].unpack1 'C'
+        @data[0x02].unpack1('C')
       end
 
       # Sector size
       def size
-        @data[0x03].unpack1 'C'
+        @data[0x03].unpack1('C') * 256
       end
 
       # FDC status register 1 and 2.

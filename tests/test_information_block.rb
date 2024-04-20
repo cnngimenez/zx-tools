@@ -1,6 +1,6 @@
 # Copyright 2024 Christian Gimenez
 #
-# Rakefile
+# test_information_block.rb
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,14 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-require "minitest/test_task"
+# frozen_string_literal: true
 
-Minitest::TestTask.create(:test) do |t|
-  t.libs << 'source'
-  t.libs << 'source/disks'
-  t.libs << 'source/disks/mv'
-  # t.warning = false
-  t.test_globs = ["tests/test_*.rb"]
+require 'minitest/autorun'
+require 'information_block'
+
+class TestSectorInformationBlock2 < Minitest::Test
+  def setup
+    @dib = Disks::MV2::DiskInformationBlock.new
+    @tib = Disks::MV2::TrackInformationBlock.new
+    @sib = Disks::MV2::SectorInformationBlock.new
+  end
+
+  def test_dib_defaults
+    dibbin = "MV - CPCEMU Disk-File\r\nDisk-Info\r\n" +
+             "\0\0\0\0\0\0\0\0\0\0\0\0\0\0" +
+             "\x28\x01\x00\x13" +
+             "\0" * 204
+    assert_equal 256, dibbin.length 
+    assert_equal dibbin, @dib.to_bin
+  end
+  
 end
-
-task :default => :test
