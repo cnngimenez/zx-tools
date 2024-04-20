@@ -16,10 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 require 'minitest/autorun'
+require 'disks'
 
 class TestDiskInformationBlock < Minitest::Test
   def setup
-    @disk = MV::MVDisk.from_file 'tests/data/test.dks'
+    @disk = Disks::MV::MVDisk.from_file 'tests/data/test.dsk'
     @dib = @disk.dib
   end
   
@@ -28,7 +29,7 @@ class TestDiskInformationBlock < Minitest::Test
   end
 
   def test_creator_name
-    assert_equal "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", @dib,creator_name
+    assert_equal "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", @dib.creator_name
   end
 
   def test_track_count
@@ -40,7 +41,7 @@ class TestDiskInformationBlock < Minitest::Test
   end
 
   def test_track_size
-    asert_equal 4864, @dib.track_size
+    assert_equal 4864, @dib.track_size
   end
 
   def test_track_range
