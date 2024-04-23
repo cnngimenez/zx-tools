@@ -65,17 +65,64 @@ module Disks
         @descriptor = DEFAULT_DESCRIPTOR
         @number = 1
         @side = 1
-        @sector_size = 512
+        @sector_size = 0
         @gap_3_length = 78
         @filler_byte = "\xE5"
-        @sib_list = SectorInformationBlock.create_empty_list 9
+        @sib_list = []
       end
+
+      # It sometimes possible that sector_size here is different to the one in
+      # the SIB. This will lead to different binary outputs. No checks are implemented
+      # on #sector_size=.
 
       attr_accessor :descriptor, :number, :side, :sector_size,
                     :gap_3_length, :filler_byte, :sib_list
 
+      # Return the amount of SIB.
+      #
+      # Notes: The sector_count is not implemented as an attribute. It is calculated
+      # from @sib_list.
       def sector_count
         @sib_list.length
+      end
+
+      # Add a SectorInformationBlock instance.
+      #
+      # @param sib [SectorInformationBlock]
+      # @param assign_tib_data [Boolean] Assign current TIB data to the SIB instance.
+      def add_sib(sib, assign_tib_data: false)
+        if assign_tib_data
+          sib.track = @number
+          sib.side = @side
+          sib.sector_size = @sector_size
+        end
+        @sib_list.push sib
+      end
+
+      # Ensure the amount of SIB is the given one.
+      #
+      # @param amount [Integer] The amount of sectors the track should have.
+      def fill_sibs(amount)
+        if @sib_list.length < amount
+          add_empty_sib amount - @sib_list.length
+        elsif @sib_list.length > amount
+          raise "Amount of SIB we have #{@sib_list.length} is greater than the requested #{amount}!"
+        end
+      end
+
+      # Add empty SIB to the list
+      #
+      # @param amount [Integer] How many empty SIB should be added.
+      def add_empty_sib(amount = 1)
+        amount.times do
+          sib = SectorInformationBlock.new
+          sib.track = @number
+          sib.side = @side
+          sib.sector_id = @sib_list.length + 1
+          sib.sector_size = @sector_size
+
+          @sib_list.push sib
+        end
       end
 
       # Return the binary of the sector information block list.
@@ -93,6 +140,11 @@ module Disks
          sib_bin].pack 'A13x3CCx2CCCA1a*'
       end
 
+      # Return the TIB size in binary format in bytes.
+      def data_size
+        24 + @sib_list.sum(&:data_size)
+      end
+
       class << self
         # Parse a binary string into a DiskInformationBlock instance.
         #
@@ -106,14 +158,14 @@ module Disks
 
           # sector_count is not parsed!
           tib.descriptor, number, side,
-          sector_size,
-          tib.gap_3_length, tib.filler_byte, sib_bin = str.unpack 'A13x3CCx2CxCA1a*'
+          sector_size, sector_count,
+          tib.gap_3_length, tib.filler_byte, sib_bin = str.unpack 'A13x3CCx2CCCA1a*'
 
           tib.number = number + 1
           tib.side = side + 1
           tib.sector_size = sector_size * 256
 
-          tib.sib_list = SectorInformationBlock.from_lst_bin sib_bin
+          tib.sib_list = SectorInformationBlock.from_lst_bin sib_bin, sector_count
 
           tib
         end
@@ -121,11 +173,14 @@ module Disks
     end
 
     class SectorInformationBlock
+      # Default SIB binary size in bytes
+      DEFAULT_DATA_SIZE = 8
+
       def initialize
         @track = 1
         @side = 1
         @sector_id = 1
-        @sector_size = 512
+        @sector_size = 0
         @fdc = [0, 0]
       end
 
@@ -134,6 +189,11 @@ module Disks
       def to_bin
         [@track - 1, @side - 1, @sector_id, @sector_size / 256,
          @fdc[0], @fdc[1]].pack 'CCCCCCx2'
+      end
+
+      # Return the SIB binary size in bytes.
+      def data_size
+        DEFAULT_DATA_SIZE
       end
 
       class << self
@@ -161,9 +221,10 @@ module Disks
           sib
         end
 
-        def from_lst_bin(str)
+        def from_lst_bin(str, count = nil)
           lst = []
-          (str.length / 8).times do |index|
+          count = str.length / 8 if count.nil?
+          count.times do |index|
             istart = index * 8
             iend = istart + 8
             lst.push SectorInformationBlock.from_bin str[istart..iend]

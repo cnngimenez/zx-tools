@@ -30,15 +30,16 @@ class TestSectorInformationBlock2 < Minitest::Test
                "WHO\0\0\0\0\0\0\0\0\0\0\0" +
                "\x29\x02\x01\x13" +
                "\0" * 204
-    @sibbin1 = "\x00\x00\x01\x02\x00\x00\0\0"
-    @sibbin2 = "\x01\x02\x05\x02\x01\x02\0\0"
-    @siblstbin = "\x01\x01\x01\x02\x01\x02\0\0" +
-                 "\x01\x01\x02\x02\x01\x02\0\0" +
-                 "\x01\x01\x03\x02\x01\x02\0\0"
+    @sibbin1 = "\x00\x00\x01\x00\x00\x00\0\0"
+    @sibbin2 = "\x01\x02\x05\x00\x01\x02\0\0"
+    @siblstbin = "\x01\x01\x01\x00\x01\x02\0\0" +
+                 "\x01\x01\x02\x00\x01\x02\0\0" +
+                 "\x01\x01\x03\x00\x01\x02\0\0"
     @tibbin1 = "Track-Info\r\n\0" +
                "\0\0\0" +
                "\x01\x02\0\0\x03\x03\x4E\xF5" +
                @siblstbin
+    @empty7 = File.binread 'tests/data/empty.dsk', 0x100, 0x700
     @dib = Disks::MV2::DiskInformationBlock.new
     @tib = Disks::MV2::TrackInformationBlock.new
     @sib = Disks::MV2::SectorInformationBlock.new
@@ -66,7 +67,7 @@ class TestSectorInformationBlock2 < Minitest::Test
     assert_equal 2, sib.track
     assert_equal 3, sib.side
     assert_equal 5, sib.sector_id
-    assert_equal 512, sib.sector_size
+    assert_equal 0, sib.sector_size
     assert_equal [1, 2], sib.fdc
   end
 
@@ -77,22 +78,35 @@ class TestSectorInformationBlock2 < Minitest::Test
     assert_equal 2, lst[0].track
     assert_equal 2, lst[0].side
     assert_equal 1, lst[0].sector_id
-    assert_equal 512, lst[0].sector_size
+    assert_equal 0, lst[0].sector_size
     assert_equal [1, 2], lst[0].fdc
 
     assert_equal 2, lst[1].track
     assert_equal 2, lst[1].side
     assert_equal 2, lst[1].sector_id
-    assert_equal 512, lst[1].sector_size
+    assert_equal 0, lst[1].sector_size
     assert_equal [1, 2], lst[1].fdc
 
     assert_equal 2, lst[2].track
     assert_equal 2, lst[2].side
     assert_equal 3, lst[2].sector_id
-    assert_equal 512, lst[2].sector_size
+    assert_equal 0, lst[2].sector_size
     assert_equal [1, 2], lst[2].fdc
   end
 
+  def test_tib_empty_from_bin
+    tib = Disks::MV2::TrackInformationBlock.from_bin @empty7
+
+    assert_equal "Track-Info\r\n", tib.descriptor
+    assert_equal 6, tib.number
+    assert_equal 1, tib.side
+    assert_equal 0, tib.sector_size
+    assert_equal 78, tib.gap_3_length
+    assert_equal [0xe5], tib.filler_byte.bytes
+    assert_equal 1, tib.sector_count
+    assert_equal 1, tib.sib_list.length
+  end
+  
   def test_tib_to_bin
     tib = Disks::MV2::TrackInformationBlock.new
     tib.number = 2
@@ -116,5 +130,4 @@ class TestSectorInformationBlock2 < Minitest::Test
     assert_equal [0xf5], tib.filler_byte.bytes
     assert_equal 3, tib.sib_list.length
   end
-  
 end
