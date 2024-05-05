@@ -28,9 +28,9 @@ module Disks
       def initialize
         @descriptor = DEFAULT_DESCRIPTOR
         @creator_name = "\x00" * 14
-        @track_count = 40
+        @track_count = 0x28
         @side_count = 1
-        @track_size = 4864
+        @track_size = 0x180
       end
 
       attr_accessor :descriptor, :creator_name, :track_count, :side_count, :track_size
@@ -60,6 +60,8 @@ module Disks
 
     class TrackInformationBlock
       DEFAULT_DESCRIPTOR = "Track-Info\r\n\0"
+      
+      DEFAULT_TIBSIZE = 0x100
 
       def initialize
         @descriptor = DEFAULT_DESCRIPTOR
@@ -78,6 +80,15 @@ module Disks
       attr_accessor :descriptor, :number, :side, :sector_size,
                     :gap_3_length, :filler_byte, :sib_list
 
+      # Track Information Block size.
+      #
+      # This is the complete TIB size (TIB + all SIB + null bytes).
+      #
+      # @see data_size
+      def tib_size
+        DEFAULT_TIBSIZE
+      end
+      
       # Return the amount of SIB.
       #
       # Notes: The sector_count is not implemented as an attribute. It is calculated
@@ -141,6 +152,10 @@ module Disks
       end
 
       # Return the TIB size in binary format in bytes.
+      #
+      # This is the sum of SIB + the amount of bytes in TIB header.
+      #
+      # @see tib_size
       def data_size
         24 + @sib_list.sum(&:data_size)
       end

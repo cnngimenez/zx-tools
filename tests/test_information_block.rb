@@ -22,10 +22,6 @@ require 'information_block'
 
 class TestSectorInformationBlock2 < Minitest::Test
   def setup
-    @dibbin = "MV - CPCEMU Disk-File\r\nDisk-Info\r\n" +
-              "\0\0\0\0\0\0\0\0\0\0\0\0\0\0" +
-              "\x28\x01\x00\x13" +
-              "\0" * 204
     @dibbin2 = "MV - CPCEMU Disk-File\r\nDisk-Info\r\n" +
                "WHO\0\0\0\0\0\0\0\0\0\0\0" +
                "\x29\x02\x01\x13" +
@@ -39,6 +35,7 @@ class TestSectorInformationBlock2 < Minitest::Test
                "\0\0\0" +
                "\x01\x02\0\0\x03\x03\x4E\xF5" +
                @siblstbin
+    @dibbin = File.binread 'tests/data/empty.dsk', 0x100, 0x0
     @empty7 = File.binread 'tests/data/empty.dsk', 0x100, 0x700
     @dib = Disks::MV2::DiskInformationBlock.new
     @tib = Disks::MV2::TrackInformationBlock.new

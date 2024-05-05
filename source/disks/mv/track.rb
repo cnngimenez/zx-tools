@@ -42,9 +42,21 @@ module Disks
         @tib.side
       end
 
+      def data
+        @sectors.map(&:data).join
+      end
+
       def add_sector(sector, sib = nil)
         @sectors.push sector
         @tib.add_sib sib unless sib.nil?
+      end
+
+      def new_empty_sector(size, filler_byte)
+        sector = Sector.new
+        sector.sector_size = size
+        sector.filler_byte = filler_byte
+
+        add_sector sector
       end
 
       def to_bin
@@ -72,6 +84,19 @@ module Disks
           track.tib = tib
           track.sectors = sectors
           track
+        end
+
+        def lst_from_bin(data, track_size, track_count)
+          tracks = []
+          iend = -1
+          track_count.times do
+            istart = iend + 1
+            iend = istart + track_size - 1
+            trackdata = data[istart..iend]
+            tracks.push Track.from_bin trackdata unless trackdata.nil?
+          end
+
+          tracks
         end
       end
     end
