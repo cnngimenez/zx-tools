@@ -45,9 +45,9 @@ The disk information block is represented by the class =Disks::MV::DiskInformati
 
 The *Track String* is "Track-Info\r\n\0". Comparing to the MV String of a Disk Information Block, in this case a zero character must be added to the end, to complete the field length of 13 bytes. 
 
-The *sector size* field size is 1 byte. Therefore, it is a number between 0 to 255, which it cannot specify the complete size in bytes of the sector. This byte value must be multiplied by 256 according to CPCWiki (see [[https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format&mobileaction=toggle_view_desktop][CPCWiki article]]). The usual value is 2 (512 bytes).
+The *sector size* field size is 1 byte. Therefore, it is a number between 0 to 255, which it cannot specify the complete size in bytes of the sector. This byte value must be multiplied by 256 according to CPCWiki (see [[https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format&mobileaction=toggle_view_desktop][CPCWiki article]]). The usual value is 2 (512 bytes or 200_{16} bytes).
 
-The *number of sectors* is represented as =sector_count= identifier in the implementation. Its usual value is 9.
+The *number of sectors* is represented as =sector_count= identifier in the implementation. Its usual value is 9. This means, the usual track size is $512 \times{} 9 = 4608$ bytes (1200_{16} Bytes).
 
 Also, the *GAP3 length* can be found as =gap_3_length= in the implementation. The common value is 78.
 
@@ -86,6 +86,7 @@ The track information block is represented by the class =Disks::MV:TrackInformat
 
 The track information block is represented by the class =Disks::MV:SectorInformationBlock=. The sector itself is another class: =Disks::MV::Sector=.
 
+
 * Directory
 
 The directory is a list of files positioned at the begining of the disk (at track 2 usually). Each directory entry has 32 bytes with the following meaning:
@@ -107,6 +108,44 @@ The directory is a list of files positioned at the begining of the disk (at trac
 - Al :: 16 bytes of Block pointers.
 
 See the [[https://www.cpcwiki.eu/index.php/Disk_structure][Disk Structure article at CPCWiki]] for more information.
+
+** Status value
+
+#+caption: Value of the St byte.
+|   0 |  15 | File: user number                            |
+|  16 |  31 | File: user number (P2DOS) or password extent |
+|  32 |  32 | Disk label                                   |
+|  33 |  33 | Time stamp (P2DOS)                           |
+| 229 | 229 | Erased or unused (hex: 0xE5)                 |
+
+** Filename
+The highest bit of the filename characters are the attribute.
+
+#+caption: File name highest bit meanings.
+| Character | Description                                         |
+|-----------+-----------------------------------------------------|
+| F0        | Wheel byte                                          |
+| F1        | Public file (P2DOS, ZSDOS), foreground-only command |
+| F2        | Date stamp (ZSDOS), background-only command         |
+| F7        | Wheel protect (ZSDOS)                               |
+| E0        | Read-only file                                      |
+| E1        | System file                                         |
+| E2        | Archived                                            |
+
+** Extent number
+One file can use more than one directory entry.
+
+** Bytes used
+This is the bytes used by this extent.
+
+The total bytes (T) used in the extent is calculated as $T = Rc \times{} 80_{16}$ ($T = Rc \times{}  126$).
+
+** Pointers
+The pointers established which blocks stores the file. The offset address stored at the pointer value can be calculated as  $D + Al \times{} 400_{16}$, where $D$ is the directory address. The offset does not consider track and 
+
+The directory is considered to start at block 0. It is the first byte, but considering the track and disk information block, it should be at address 0x1500 under usual circumstances (sector size of 512 and 9 sectors per track, 512 * 9 = 4608 bytes per track).
+
+
 
 * Blocks
 The data (without headers) is divided by blocks. The block size can be 1024, 2048, 4096, 8192 or 16384, but the usual value is 2048.
