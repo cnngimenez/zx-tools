@@ -84,8 +84,9 @@ The track information block is represented by the class =Disks::MV:TrackInformat
 |     05 | FDC status register 2 |     1 |
 |  06-07 | not used              |     2 |
 
-The track information block is represented by the class =Disks::MV:SectorInformationBlock=. The sector itself is another class: =Disks::MV::Sector=.
+The *sector size* is calculated as in the TIB. 
 
+The sector information block is represented by the class =Disks::MV:SectorInformationBlock=. The sector itself is another class: =Disks::MV::Sector=.
 
 * Directory
 

@@ -30,8 +30,28 @@ module Disks
         @data = ""
       end
 
-      attr_accessor :sector_size, :filler_byte, :data
+      # Sector size in bytes.
+      attr_accessor :sector_size
 
+      # This is the byte used to fill the sector to represent that no information is present.
+      # This byte is replicated at the end of the sector data.
+      attr_accessor :filler_byte
+
+      # Data including filler bytes.
+      attr_accessor :data
+     
+      # Return the data according to the sector size and the filler byte.
+      #
+      # This means, remove the filler byte to obtain what would be the saved data on the disk.
+      def real_data
+        d = @data[0, @sector_size]
+        last = d.bytes.rindex do |b|
+          b != @filler_byte.bytes[0]
+        end
+        last = -1 if last.nil?
+        d[0, last + 1]
+      end
+      
       def to_bin
         data = @data.clone
 
@@ -59,7 +79,9 @@ module Disks
           sib_list.each do |sib|
             istart = iend + 1
             iend = istart + sib.sector_size - 1
-            sectors.push Sector.from_bin(data[istart..iend], filler_byte)
+            sector = Sector.from_bin(data[istart..iend], filler_byte)
+            sector.sector_size = sib.sector_size
+            sectors.push sector
           end
           sectors
         end

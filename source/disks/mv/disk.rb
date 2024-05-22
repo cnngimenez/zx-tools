@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 require_relative 'information_block'
+require_relative 'track'
 
 module Disks
   module MV2

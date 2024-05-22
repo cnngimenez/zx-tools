@@ -17,7 +17,8 @@
 
 # frozen_string_literal: true
 
-require 'information_block'
+require_relative 'information_block'
+require_relative 'sector'
 
 module Disks
   module MV2
@@ -44,6 +45,16 @@ module Disks
 
       def data
         @sectors.map(&:data).join
+      end
+
+      # Return the real data of sectors.
+      #
+      # This means, return all sectors data that would be stored on the
+      # disk, without filler bytes.
+      #
+      # @see Disks::MV2::Sector#real_data
+      def real_data
+        @sectors.map(&:real_data).join
       end
 
       def add_sector(sector, sib = nil)
