@@ -19,7 +19,7 @@
 
 # frozen_string_literal: true
 
-require_relative '../source/disks'
+require_relative '../source/disks/mv/disk'
 
 if ARGV.empty?
   puts 'List tracks in a disk file.\n'
@@ -39,7 +39,7 @@ def show_tib(tib)
   puts "Filler byte: #{tib.filler_byte.inspect}"
 end
 
-@d = Disks::MV::MVDisk.from_file ARGV[0]
+@d = Disks::MV2::Disk.from_bin File.binread ARGV[0]
 track_count = @d.dib.track_count
 side_count = @d.dib.side_count
 track_size = @d.dib.track_size
@@ -48,5 +48,5 @@ puts "Disk has #{side_count} side/s, with #{track_count} track/s."
 puts "Track size is #{track_size} bytes."
 
 track_count.times do |num|
-  show_tib  @d.track(num + 1).tib
+  show_tib  @d.tracks[num].tib
 end
