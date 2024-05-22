@@ -33,20 +33,18 @@ module CPM
       @entries.map(&:to_bin).join
     end
 
-    private
-
-    # Create a list of 32 byte-string elements from data.
-    def split_data(data)
-      lst = []
-      i = 0
-      while i < data.size
-        lst.push data[i, 32]
-        i += 32
-      end
-      lst
-    end
-
     class << self
+      # Create a list of 32 byte-string elements from data.
+      def split_data(data)
+        lst = []
+        i = 0
+        while i < data.size
+          lst.push data[i, 32]
+          i += 32
+        end
+        lst
+      end
+
       def from_bin(data)
         dir = Directory.new
 
@@ -109,7 +107,7 @@ module CPM
     end
 
     def extension_with_props=(ext)
-      ext2 = ext.bytes
+      ext2 = ext.rjust(3).bytes
       @extension = ext2.map do |c|
         b = c & 0b0111_1111
         b.chr
@@ -137,6 +135,7 @@ module CPM
         status, filename, extension, last_bytes = data[0x0, 0x10].unpack 'CA8A3xxxC'
         pointers = data[0x10, 0x10].unpack 'CCCCCCCCCCCCCCCC'
         i = pointers.rindex(&:nonzero?)
+        i = -1 if i.nil?
         pointers = pointers[0, i + 1]
 
         e = Entry.new '', '', last_bytes, pointers
