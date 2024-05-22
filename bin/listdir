@@ -32,7 +32,11 @@ end
 @d = Disks::MV2::Disk.from_bin File.binread(ARGV[0])
 @directory = CPM::Directory.from_bin @d.tracks[1].sectors[0].real_data
 @directory.entries.each do |entry|
-  s = "#{entry.filename.rjust(8)}"
-  s += ".#{entry.extension.rjust(3)}" unless entry.extension.empty?
-  s += "     #{entry.
+  s = "#{entry.filename.ljust(8)}"
+  s += ".#{entry.extension.ljust(3)}"
+  s += "     #{entry.file_size(0x400)}B"
+  s += "R" if entry.read_only
+  s += "S" if entry.system_file
+  s += "A" if entry.archived
+  puts s
 end

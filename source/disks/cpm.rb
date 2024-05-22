@@ -79,6 +79,11 @@ module CPM
     attr_accessor :status, :filename, :extension, :pointers,
                   :read_only, :system_file, :archived
 
+    def file_size(block_size)
+      blocks = @pointers.count(&:nonzero?)
+      (blocks - 1) * block_size + @last_bytes
+    end
+
     def ext_to_bin
       ext = @extension.ljust(3).bytes
       ext[0] = ext[0] | 0b1000_0000 if @read_only
