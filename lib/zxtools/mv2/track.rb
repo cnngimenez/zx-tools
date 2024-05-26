@@ -20,7 +20,7 @@
 require_relative 'information_block'
 require_relative 'sector'
 
-module Disks
+module ZXTools
   module MV2
     # Track representation
     #

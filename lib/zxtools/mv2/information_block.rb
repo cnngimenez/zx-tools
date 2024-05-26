@@ -17,7 +17,7 @@
 
 # frozen_string_literal: true
 
-module Disks
+module ZXTools
   module MV2
     # DiskInformationBlock class
     class DiskInformationBlock

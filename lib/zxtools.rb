@@ -17,4 +17,8 @@
 
 # frozen_string_literal: true
 
+# The ZXTools module.
+module ZXTools
+end
+
 require_relative 'zxtools/disks'

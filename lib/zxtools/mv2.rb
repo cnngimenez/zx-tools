@@ -1,6 +1,6 @@
 # Copyright 2024 Christian Gimenez
 #
-# disks.rb
+# mv.rb
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,5 +17,14 @@
 
 # frozen_string_literal: true
 
-require_relative 'disks/mv'
-require_relative 'disks/cpm'
+module ZXTools
+  
+  # This modules process the MV2 Diskette image format.
+  module MV2
+  end
+end
+
+require_relative 'mv2/disk'
+require_relative 'mv2/information_block'
+require_relative 'mv2/sector'
+require_relative 'mv2/track'

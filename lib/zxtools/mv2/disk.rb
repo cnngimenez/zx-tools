@@ -18,7 +18,7 @@
 require_relative 'information_block'
 require_relative 'track'
 
-module Disks
+module ZXTools
   module MV2
     class Disk
       def initialize

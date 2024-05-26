@@ -19,7 +19,7 @@
 
 require_relative 'information_block'
 
-module Disks
+module ZXTools
   module MV2
     class Sector
       DEFAULT_FILLER_BYTE = "\xe5"
