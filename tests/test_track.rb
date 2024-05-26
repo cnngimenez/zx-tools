@@ -18,9 +18,7 @@
 # frozen_string_literal: true
 
 require 'minitest/autorun'
-require 'track'
-require 'sector'
-require 'information_block'
+require 'zxtools'
 
 class TestTrack2 < Minitest::Test
   def setup
@@ -33,14 +31,14 @@ class TestTrack2 < Minitest::Test
   end
 
   def test_empty_from_bin
-    track = Disks::MV2::Track.from_bin @empty7
+    track = ZXTools::MV2::Track.from_bin @empty7
     assert_equal 6, track.number
     assert_equal 1, track.side
     assert_equal 1, track.sectors.length    
   end
   
   def test_from_bin
-    track = Disks::MV2::Track.from_bin @data1
+    track = ZXTools::MV2::Track.from_bin @data1
     assert_equal 9, track.sectors.length
     assert_equal @sector0.bytes, track.sectors[0].to_bin.bytes
     assert_equal 512, track.sectors[0].to_bin.length
@@ -49,13 +47,13 @@ class TestTrack2 < Minitest::Test
   end
 
   def test_to_bin
-    track = Disks::MV2::Track.new 6, 1
-    sib = Disks::MV2::SectorInformationBlock.new
+    track = ZXTools::MV2::Track.new 6, 1
+    sib = ZXTools::MV2::SectorInformationBlock.new
     # SIB track and sector_id has no explanation in recently created dsk...
     # For some reason, new DSK files has one sector, with no size, track = 3,
     # and its ID is 0xfe.
     sib.sector_id, sib.track = 0xfe, 3     
-    sector = Disks::MV2::Sector.new
+    sector = ZXTools::MV2::Sector.new
     sector.sector_size = 0
     track.add_sector sector, sib
 

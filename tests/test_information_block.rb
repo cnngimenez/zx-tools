@@ -18,7 +18,7 @@
 # frozen_string_literal: true
 
 require 'minitest/autorun'
-require 'information_block'
+require 'zxtools'
 
 class TestSectorInformationBlock2 < Minitest::Test
   def setup
@@ -37,9 +37,9 @@ class TestSectorInformationBlock2 < Minitest::Test
                @siblstbin
     @dibbin = File.binread 'tests/data/empty.dsk', 0x100, 0x0
     @empty7 = File.binread 'tests/data/empty.dsk', 0x100, 0x700
-    @dib = Disks::MV2::DiskInformationBlock.new
-    @tib = Disks::MV2::TrackInformationBlock.new
-    @sib = Disks::MV2::SectorInformationBlock.new
+    @dib = ZXTools::MV2::DiskInformationBlock.new
+    @tib = ZXTools::MV2::TrackInformationBlock.new
+    @sib = ZXTools::MV2::SectorInformationBlock.new
   end
 
   def test_dib_to_bin
@@ -47,7 +47,7 @@ class TestSectorInformationBlock2 < Minitest::Test
   end
 
   def test_dib_from_bin
-    dib = Disks::MV2::DiskInformationBlock.from_bin @dibbin2
+    dib = ZXTools::MV2::DiskInformationBlock.from_bin @dibbin2
     assert_equal 'WHO', dib.creator_name
     assert_equal 41, dib.track_count, 41
     assert_equal 2, dib.side_count
@@ -55,12 +55,12 @@ class TestSectorInformationBlock2 < Minitest::Test
   end
 
   def test_sib_to_bin
-    sib = Disks::MV2::SectorInformationBlock.new
+    sib = ZXTools::MV2::SectorInformationBlock.new
     assert_equal @sibbin1.bytes, sib.to_bin.bytes
   end
 
   def test_sib_from_bin
-    sib = Disks::MV2::SectorInformationBlock.from_bin @sibbin2
+    sib = ZXTools::MV2::SectorInformationBlock.from_bin @sibbin2
     assert_equal 2, sib.track
     assert_equal 3, sib.side
     assert_equal 5, sib.sector_id
@@ -69,7 +69,7 @@ class TestSectorInformationBlock2 < Minitest::Test
   end
 
   def test_sib_from_lst_bin
-    lst = Disks::MV2::SectorInformationBlock.from_lst_bin @siblstbin
+    lst = ZXTools::MV2::SectorInformationBlock.from_lst_bin @siblstbin
     assert_equal 3, lst.length
 
     assert_equal 2, lst[0].track
@@ -92,7 +92,7 @@ class TestSectorInformationBlock2 < Minitest::Test
   end
 
   def test_tib_empty_from_bin
-    tib = Disks::MV2::TrackInformationBlock.from_bin @empty7
+    tib = ZXTools::MV2::TrackInformationBlock.from_bin @empty7
 
     assert_equal "Track-Info\r\n", tib.descriptor
     assert_equal 6, tib.number
@@ -105,19 +105,19 @@ class TestSectorInformationBlock2 < Minitest::Test
   end
   
   def test_tib_to_bin
-    tib = Disks::MV2::TrackInformationBlock.new
+    tib = ZXTools::MV2::TrackInformationBlock.new
     tib.number = 2
     tib.side = 3
     tib.sector_size = 3 * 256
     tib.gap_3_length = 78
     tib.filler_byte = "\xf5"
-    tib.sib_list = Disks::MV2::SectorInformationBlock.from_lst_bin @siblstbin
+    tib.sib_list = ZXTools::MV2::SectorInformationBlock.from_lst_bin @siblstbin
 
     assert_equal @tibbin1.bytes, tib.to_bin.bytes
   end
   
   def test_tib_from_bin
-    tib = Disks::MV2::TrackInformationBlock.from_bin @tibbin1
+    tib = ZXTools::MV2::TrackInformationBlock.from_bin @tibbin1
     
     assert_equal "Track-Info\r\n", tib.descriptor
     assert_equal 2, tib.number

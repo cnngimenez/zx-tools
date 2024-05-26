@@ -18,10 +18,10 @@
 # frozen_string_literal: true
 
 require 'minitest/autorun'
-require 'cpm'
+require 'zxtools'
 
 class TestCPM < Minitest::Test
-  include CPM
+  include ZXTools::CPM
 
   # def setup
   # end

@@ -19,8 +19,6 @@ require "minitest/test_task"
 
 Minitest::TestTask.create(:test) do |t|
   t.libs << 'lib'
-  t.libs << 'lib/disks'
-  t.libs << 'lib/disks/mv'
   # t.warning = false
   t.test_globs = ["tests/test_*.rb"]
 end

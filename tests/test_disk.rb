@@ -16,11 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 require 'minitest/autorun'
-require 'disk'
-require 'sector'
-require 'information_block'
+require 'zxtools'
 
 class TestDisk2 < Minitest::Test
+
   # def setup    
   # end
 
@@ -28,7 +27,7 @@ class TestDisk2 < Minitest::Test
     empty = File.binread 'tests/data/empty.dsk'
     # track1data = File.binread 'tests/data/empty.dsk', 0x180 - 0x200 , 0x200
     
-    disk = Disks::MV2::Disk.from_bin empty
+    disk = ZXTools::MV2::Disk.from_bin empty
     # Test the DIB
     assert_equal 0x28, disk.dib.track_count
     assert_equal 0x01, disk.dib.side_count
@@ -42,7 +41,7 @@ class TestDisk2 < Minitest::Test
     formatted = File.binread 'tests/data/formatted-edited.dsk'
     track1data = File.binread 'tests/data/formatted-edited.dsk', (512 * 9), 0x200
     
-    disk = Disks::MV2::Disk.from_bin formatted
+    disk = ZXTools::MV2::Disk.from_bin formatted
     # Test the DIB
     assert_equal 0x28, disk.dib.track_count
     assert_equal 0x01, disk.dib.side_count
@@ -61,7 +60,7 @@ class TestDisk2 < Minitest::Test
   end
   
   # def test_empty_to_bin
-  #   disk = Disks::MV2::Disk.new
+  #   disk = ZXTools::MV2::Disk.new
   #   # File.binwrite '/tmp/empty-test.dsk', disk.to_bin
   #   assert_equal @empty.bytes, disk.to_bin.bytes
   # end
