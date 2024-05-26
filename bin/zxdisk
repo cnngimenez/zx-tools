@@ -19,7 +19,7 @@
 
 # frozen_string_literal: true
 
-require 'zxtools/disks/mv/disk'
+require 'zxtools'
 
 if ARGV.empty?
   puts 'Show disk information.\n'
@@ -29,7 +29,7 @@ if ARGV.empty?
   exit
 end
 
-@d = Disks::MV2::Disk.from_bin File.binread ARGV[0]
+@d = ZXTools::MV2::Disk.from_bin File.binread ARGV[0]
 @dib = @d.dib
 
 puts "Disk: #{ARGV[0]}"

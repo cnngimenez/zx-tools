@@ -19,7 +19,7 @@
 
 # frozen_string_literal: true
 
-require 'zxtools/disks/mv/disk'
+require 'zxtools'
 
 if ARGV.empty?
   puts 'List tracks in a disk file.\n'
@@ -39,7 +39,7 @@ def show_tib(tib)
   puts "Filler byte: #{tib.filler_byte.inspect}"
 end
 
-@d = Disks::MV2::Disk.from_bin File.binread ARGV[0]
+@d = ZXTools::MV2::Disk.from_bin File.binread ARGV[0]
 track_count = @d.dib.track_count
 side_count = @d.dib.side_count
 track_size = @d.dib.track_size

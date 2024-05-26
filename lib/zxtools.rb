@@ -21,4 +21,5 @@
 module ZXTools
 end
 
-require_relative 'zxtools/disks'
+require_relative 'zxtools/mv2'
+require_relative 'zxtools/cpm'

@@ -23,16 +23,21 @@ Gem::Specification.new do |s|
   s.summary     = 'Tools to manage emulated diskette images'
   s.description = 'Tools to read, write, extract, or add files from/to an emulated diskette.'
   s.authors     = ["Christian Gimenez"]
-  s.email       = [nil],
+  s.email       = [nil]
+  s.bindir      = 'bin'
+  s.executables = ['zxlistdir', 'zxblock', 'zxdisk', 'zxdiskdata', 'zxtracks']
+  s.require_paths = ['lib']
   s.files       = Dir[
     'lib/**/*.rb',
     'docs/*.org',
     'docs/*.info',
+    'docs/*.md',
     'bin/**',
     'tests/**'
   ] + [
     'LICENSE',
     'README.org',
+    'README.md',
     'Gemfile',
     'Rakefile',
     'zx-tools.gemspec'

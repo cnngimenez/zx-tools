@@ -19,13 +19,12 @@
 
 # frozen_string_literal: true
 
-require 'zxtools/disks/mv/disk'
-require 'zxtools/disks/cpm'
+require 'zxtools'
 
 if ARGV.empty?
 end
 
-@d = Disks::MV2::Disk.from_bin File.binread ARGV[0]
-blocks = CPM::Block.from_bin @d.data[0x1200..-1]
+@d = ZXTools::MV2::Disk.from_bin File.binread ARGV[0]
+blocks = ZXTools::CPM::Block.from_bin @d.data[0x1200..-1]
 blocknum = ARGV[1].to_i
 print blocks[blocknum].data

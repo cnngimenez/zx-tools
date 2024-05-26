@@ -1,4 +1,4 @@
-
+g
 * Disk image
 The dsk format is a hardware representation. A disk is divided in sides, which in turn it has tracks and each track has sectors.
 

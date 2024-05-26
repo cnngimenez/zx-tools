@@ -19,8 +19,7 @@
 
 # frozen_string_literal: true
 
-require 'zxtools/disks/mv/disk'
-require 'zxtools/disks/cpm'
+require 'zxtools'
 
 if ARGV.empty?
   puts 'Show directory listing from a diskette image.'
@@ -31,7 +30,7 @@ if ARGV.empty?
   puts 'Attributes: R = read-only, S = system file, and A = archived.'
   puts
   puts 'Synopsis:'
-  puts '          listdir DISKFILE'
+  puts '          zxlistdir DISKFILE'
   exit
 end
 
@@ -65,8 +64,8 @@ def show_entry(entry)
   print "\n"
 end
 
-@d = Disks::MV2::Disk.from_bin File.binread(ARGV[0])
-@directory = CPM::Directory.from_bin @d.tracks[1].sectors[0].real_data
+@d = ZXTools::MV2::Disk.from_bin File.binread(ARGV[0])
+@directory = ZXTools::CPM::Directory.from_bin @d.tracks[1].sectors[0].real_data
 puts "name    .ext ~size   RSA last Block_Pointers"
 @directory.entries.each do |entry|
   show_entry entry
