@@ -76,4 +76,28 @@ class TestCPM < Minitest::Test
 
     assert_equal dir.bytes, mydir.to_bin.bytes
   end
+
+  def test_block_from_bin1
+    bin = File.binread 'tests/data/test.dsk', 0x400, 0x1500
+    blocks = Block.from_bin bin, 0x400, 0xe5
+    assert_equal bin[0, 0x80].bytes, blocks[0].data.bytes
+    assert_equal 0x400, blocks[0].size
+    assert_equal 0, blocks[0].number
+  end
+
+  def test_block_from_bin2
+    bin = File.binread 'tests/data/test.dsk', 0x400 * 4, 0x1500
+    
+    blocks = Block.from_bin bin, 0x400, 0xe5
+
+    # Real data (without filler byte) is between 0x1500 and 0x157f
+    assert_equal bin[0, 0x80].bytes, blocks[0].data.bytes
+    assert_equal 0x400, blocks[0].size
+    assert_equal 0, blocks[0].number
+
+    # Real data (without filler byte) is between 0x1d00 and 0x1eff
+    assert_equal bin[0x800..0x9ff].bytes, blocks[2].data.bytes
+    assert_equal 0x400, blocks[2].size
+    assert_equal 2, blocks[2].number
+  end
 end

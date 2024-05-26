@@ -81,7 +81,7 @@ module CPM
 
     def file_size(block_size)
       blocks = @pointers.count(&:nonzero?)
-      (blocks - 1) * block_size + @last_bytes
+      (blocks - 1) * block_size + @last_bytes * 0x100
     end
 
     def ext_to_bin
@@ -148,6 +148,54 @@ module CPM
         e.extension_with_props = extension
         e.status = status
         e
+      end
+    end
+  end
+
+  class Block
+    DEFAULT_FILLER_BYTE = 0xe5
+    DEFAULT_SIZE = 0x400
+    
+    def initialize(number, data, filler_byte = DEFAULT_FILLER_BYTE,
+                   max_size = DEFAULT_SIZE)
+      @number = number
+      @data = data
+      @filler_byte = filler_byte
+      @size = max_size
+      trim_data!
+    end
+
+    attr_accessor :number, :data, :filler_byte
+
+    # The size of the block.
+    #
+    # This is the size with filler bytes.
+    attr_accessor :size
+
+    # Remove filler bytes at the end of data.
+    def trim_data!
+      last = @data.bytes.rindex do |b|
+        b != @filler_byte
+      end
+      return if last.nil?
+
+      @data = @data[0, last + 1]
+    end
+
+    class << self
+      def from_bin(data, max_size=0x400, filler_byte = 0xe5)
+        count = data.length / max_size
+        return [] unless count.positive?
+
+        lst = []
+        ending = -1
+        count.times do |i|
+          beg = ending + 1
+          ending = beg + max_size - 1
+          lst.push Block.new i, data[beg..ending], filler_byte, max_size
+        end
+
+        lst
       end
     end
   end
