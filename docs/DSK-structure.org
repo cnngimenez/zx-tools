@@ -110,7 +110,7 @@ The directory is a list of files positioned at the begining of the disk (at trac
 
 See the [[https://www.cpcwiki.eu/index.php/Disk_structure][Disk Structure article at CPCWiki]] for more information.
 
-** Status value
+** St - Status value
 
 #+caption: Value of the St byte.
 |   0 |  15 | File: user number                            |
@@ -119,7 +119,7 @@ See the [[https://www.cpcwiki.eu/index.php/Disk_structure][Disk Structure articl
 |  33 |  33 | Time stamp (P2DOS)                           |
 | 229 | 229 | Erased or unused (hex: 0xE5)                 |
 
-** Filename
+** F0-F7 and E0-E2 - Filename
 The highest bit of the filename characters are the attribute.
 
 #+caption: File name highest bit meanings.
@@ -133,19 +133,27 @@ The highest bit of the filename characters are the attribute.
 | E1        | System file                                         |
 | E2        | Archived                                            |
 
-** Extent number
+** Xl and Xh - Extent number
 One file can use more than one directory entry.
 
-** Bytes used
+** Rc - Bytes used
 This is the bytes used by this extent.
 
 The total bytes (T) used in the extent is calculated as $T = Rc \times{} 80_{16}$ ($T = Rc \times{}  126$).
 
-** Pointers
+** Al - Pointers
 The pointers established which blocks stores the file. The offset address stored at the pointer value can be calculated as  $D + Al \times{} 400_{16}$, where $D$ is the directory address. The offset does not consider track and 
 
-The directory is considered to start at block 0. It is the first byte, but considering the track and disk information block, it should be at address 0x1500 under usual circumstances (sector size of 512 and 9 sectors per track, 512 * 9 = 4608 bytes per track).
+The directory is considered to start at block 0. It is the first byte, but considering the track and disk information block, it should be at address 0x1500 under usual circumstances (sector size of 512 and 9 sectors per track, 512 \times{} 9 = 4608 bytes per track).
 
+** File size calculation
+In overall, considering that $Pc$ is the pointers count, $Bz$ is the block size and $Rc$ is the value in the Rc field. The file size in bytes is calculated as follows.
+
+$$(Pc - 1) \times{} Bz + Rc \times{} 128$$
+
+\warning{} The CAT command provides sizes in KB (or Kb).
+
+\warning{} The result is an approximated value.
 
 
 * Blocks
