@@ -1,3 +1,57 @@
+
+* What is it?
+These are tools to read and modify ZX Spectrum diskette images.
+
+* What can I do with this?
+It provides the following features:
+
+- [X] Extract files from a diskette image.
+- [X] List files inside the diskette.
+- [X] Show disk, tracks, and sectors information.
+- [X] Show blocks data.
+- [ ] Add files to a diskette images.
+- Provide a Ruby API to read and modify diskette images pragmatically.
+- A complete documentation about the diskette image format.
+
+* What is the objective?
+Programming inside a ZX Spectrum emulator is fun. But, sometimes, you want to use you usual editor, to see get the file, study it, mess with the binary code, etc.
+
+[[https://github.com/atari800/atari800/][The atari800 emulator]] has a particular feature for this: it is possible to assign a specific directory from the host computer as the unit H1, H2, etc. Thus, a file saved on H1 through the emulator, will appear on a directory on the host machine.
+
+[[http://fuse-emulator.sourceforge.net/fuse.php][The Fuse emulator]] does not have this possibility, but it can use cassettes and diskettes image files. Also, the emulator does not provide any means to read or extract the file from the images through programs on the host machine.
+
+So, the objective can be explained as this: Read/edit file in host \harr{} zxtools \harr{} Fuse emulator.
+The idea is to make it possible to read and edit files using nowadays tools, and at the same time, that it can be processed by the Fuse emulator too. In order to do this, the zxtools is needed as intermediary.
+
+
+* Programs
+All programs are in the bin directory. This is a Ruby Gem file, so it is supposed to be installed in your home directory with =gem install= utility.
+
+| bin/listdir    | Print all diskette files                         |
+| bin/zxblock    | Print binary data from a specific block          |
+| bin/zxdisk     | Show diskette image information                  |
+| bin/zxdiskdata | Print binary data of the whole diskette image    |
+| bin/zxtracks   | Show all tracks header information               |
+|                | (sector sizes, sector count, track number, etc.) |
+
+* How to use in development?
+
+** API Documentation
+As any other Ruby code, =rdoc= can be used to generate the documentation inside a specific directory in the source code. Just change dir inside the zx-tools cloned repository and run rdoc.
+
+: rdoc -o api-docs
+: firefox api-docs/index.html
+
+** Install gem
+See [[https://guides.rubygems.org/make-your-own-gem/]["Make your own gem" guide at rubygems.org]] for information about how to create the gem. In summary, the gem must be built first, then it can be installed. The following commands should work:
+
+: gem build zx-tools.gempsec
+: gem install ./zx-tools-*.gem
+
+** Run tests
+
+: rake test
+
 * License
 This work is under the GNU General Public License version 3 (GPLv3) except where specified.
 
@@ -10,3 +64,35 @@ The Basic source code of Clock can be found at Chapter 8 Part 33, under the foll
 https://worldofspectrum.net/ZXSpectrum128+3Manual/chapter8pt33.html
 
 Both URL were available and visited on April 20, 2024.
+
+
+
+
+* Meta     :noexport:
+
+# ----------------------------------------------------------------------
+#+TITLE:  ZX Tools Readme
+#+SUBTITLE:
+#+AUTHOR: Christian Gimenez
+#+DATE:   26 may 2024
+#+EMAIL:
+#+DESCRIPTION: 
+#+KEYWORDS: 
+#+STARTUP: inlineimages hidestars content hideblocks entitiespretty
+#+STARTUP: indent fninline latexpreview
+#+OPTIONS: H:3 num:t toc:t \n:nil @:t ::t |:t ^:{} -:t f:t *:t <:t ':t
+#+OPTIONS: TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+OPTIONS: tex:imagemagick
+
+# -- Export
+#+LANGUAGE: en
+#+EXPORT_EXCLUDE_TAGS: noexport
+
+# Local Variables:
+# org-hide-emphasis-markers: t
+# org-use-sub-superscripts: "{}"
+# fill-column: 80
+# visual-line-fringe-indicators: t
+# ispell-local-dictionary: "british"
+# org-latex-default-figure-position: "tbp"
+# End:

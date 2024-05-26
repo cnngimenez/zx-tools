@@ -234,6 +234,13 @@ The data (without headers) is divided by blocks. The block size can be 1024, 204
 
 # #+LATEX_HEADER_EXTRA:
 
+# --  Info Export
+#+TEXINFO_DIR_CATEGORY: zx-tools
+#+TEXINFO_DIR_TITLE: DSK-Structure: (DSK-structure)
+#+TEXINFO_DIR_DESC: zx-tools description of the DSK Structure
+#+TEXINFO_PRINTED_TITLE: DSK Structure
+#+TEXINFO_FILENAME: DSK-structure.info
+
 # Local Variables:
 # org-hide-emphasis-markers: t
 # org-use-sub-superscripts: "{}"

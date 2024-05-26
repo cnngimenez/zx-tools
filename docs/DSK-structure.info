@@ -1,0 +1,399 @@
+This is DSK-structure.info, produced by makeinfo version 7.1 from
+DSK-structure.texi.
+
+INFO-DIR-SECTION zx-tools
+START-INFO-DIR-ENTRY
+* DSK-Structure: (DSK-structure). zx-tools description of the DSK Structure.
+END-INFO-DIR-ENTRY
+
+
+File: DSK-structure.info,  Node: Top,  Next: Disk image,  Up: (dir)
+
+DSK-structure
+*************
+
+* Menu:
+
+* Disk image::
+* Directory::
+* Blocks::
+* Bibliography::
+
+-- The Detailed Node Listing --
+
+Disk image
+
+* Implementation Conventions::
+* Disk Information Block (DIB)::
+* Track information block (TIB)::
+* Sector Information Block (SIB)::
+
+Directory
+
+* St - Status value::
+* F0-F7 and E0-E2 - Filename::
+* Xl and Xh - Extent number::
+* Rc - Bytes used::
+* Al - Pointers::
+* File size calculation::
+
+
+
+File: DSK-structure.info,  Node: Disk image,  Next: Directory,  Prev: Top,  Up: Top
+
+1 Disk image
+************
+
+The dsk format is a hardware representation.  A disk is divided in
+sides, which in turn it has tracks and each track has sectors.
+
+   • sides
+        • tracks
+             • sectors
+
+   On the file image, each track and each sector has a header or an
+"information block".  It describes their representation.  For instance,
+the track/sector size, the current track and side number, etc.  The
+track information block is at the begining of each track, but the sector
+information block is inside the information block (not at the begining
+of the sector).
+
+* Menu:
+
+* Implementation Conventions::
+* Disk Information Block (DIB)::
+* Track information block (TIB)::
+* Sector Information Block (SIB)::
+
+
+File: DSK-structure.info,  Node: Implementation Conventions,  Next: Disk Information Block (DIB),  Up: Disk image
+
+1.1 Implementation Conventions
+==============================
+
+A disk block or structure is represented as a class.  It has a ‘@data’
+attribute which contains the complete binary information.  The data type
+used to store binary information is a String (not an Array instance).
+The ‘#unpack’ method that String class possess is useful to convert
+bytes into integer, real, or other Ruby values.  Also, several methods
+are implemented for each field the structure has, that access directly
+to the ‘@data’ attribute at the specific offset simply by using indexing
+techniques.
+
+   For instance, the information block is implemented as
+‘Disks::MV::DiskInformationBlock’ class.  Its ‘@data’ contains all the
+256 bytes of information block.  A method ‘#creator_name’ is implemented
+to access to ‘@data’ from byte number 22_16 to number 2f_16.  The
+creator name is a string, and thus no data type conversion is required.
+However, ‘#track_size’ and ‘#track_count’ methods are implemented to
+convert its bytes into a Ruby integer value.
+
+   The *number conventions* are the following:
+
+   • Track number starts with 1.  In binary data starts with 0;
+   • Side number starts with 1.  In binary data starts with 0;
+   • Sector id number starts with 1.  In binary data starts with 1.
+
+
+File: DSK-structure.info,  Node: Disk Information Block (DIB),  Next: Track information block (TIB),  Prev: Implementation Conventions,  Up: Disk image
+
+1.2 Disk Information Block (DIB)
+================================
+
+The Information Block is the first structure found on a disk file.  To
+identify it from other files, the MV String first 8 bytes can be used,
+which is "MV - CPC". The complete MV String is: ‘"MV - CPCEMU
+Disk-File\r\nDisk-Info\r\n"’ (without ending zero char).
+
+   The block structure is described at Table *note Table 1.1:
+tabinfo-block.  Its size is 256 (100_16) bytes, which it starts at byte
+0, and ends at byte 100_16
+
+   The *size of track* filed is expressed with little-endian
+representation.  Thus, low byte is followed by the high byte.  Its usual
+value is 4864 bytes (‘"\x00\x13"’ as a Ruby string).
+
+offset   description        bytes
+------------------------------------
+00-21    MV String          34
+22-2f    name of creator    14
+30       number of tracks   1
+31       number of sides    1
+32-33    size of track      2
+34-ff    not used           204
+
+Table 1.1: Information block structure.  Obtained from CPCWiki.
+
+   The disk information block is represented by the class
+‘Disks::MV::DiskInformationBlock’.
+
+
+File: DSK-structure.info,  Node: Track information block (TIB),  Next: Sector Information Block (SIB),  Prev: Disk Information Block (DIB),  Up: Disk image
+
+1.3 Track information block (TIB)
+=================================
+
+The *Track String* is "Track-Info\0".  Comparing to the MV String of a
+Disk Information Block, in this case a zero character must be added to
+the end, to complete the field length of 13 bytes.
+
+   The *sector size* field size is 1 byte.  Therefore, it is a number
+between 0 to 255, which it cannot specify the complete size in bytes of
+the sector.  This byte value must be multiplied by 256 according to
+CPCWiki (see CPCWiki article
+(https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format&mobileaction=toggle_view_desktop)).
+The usual value is 2 (512 bytes or 200_16 bytes).
+
+   The *number of sectors* is represented as ‘sector_count’ identifier
+in the implementation.  Its usual value is 9.  This means, the usual
+track size is bytes (1200_16 Bytes).
+
+   Also, the *GAP3 length* can be found as ‘gap_3_length’ in the
+implementation.  The common value is 78.
+
+   The *filler byte* is an example of the byte used to fill the track
+when there is no information in it.  In other words, it indicates that
+that byte is empty.  The track structure has the size indicated by the
+DIB structure.  Thus, all the bytes are completely reserved in the file,
+whether it is with information or with a filler byte.
+
+   The *sector information list* has one Sector Information Block
+structure per number of sectors.  A *Sector Information Block* (SIB) is
+an 8 byte register that describes the sector.  It has the sector size
+which can be used to calculate the sector position relative to the
+current track.
+
+offset   description               bytes
+-------------------------------------------
+00-0c    Track String              13
+0d-0f    unused                    3
+10       track number              1
+11       side number               1
+12-13    unused                    2
+14       sector size               1
+15       number of sectors         1
+16       GAP3 length               1
+17       filler byte               1
+18-xx    Sector information list   xx
+
+Table 1.2: Track information block structure.  Obtained from CPCWiki.
+
+   The track information block is represented by the class
+‘Disks::MV:TrackInformationBlock’.  The track itself is another class:
+‘Disks::MV::Track’.
+
+
+File: DSK-structure.info,  Node: Sector Information Block (SIB),  Prev: Track information block (TIB),  Up: Disk image
+
+1.4 Sector Information Block (SIB)
+==================================
+
+offset   description             bytes
+-----------------------------------------
+00       track                   1
+01       side                    1
+02       sector ID               1
+03       sector size             1
+04       FDC status register 1   1
+05       FDC status register 2   1
+06-07    not used                2
+
+Table 1.3: Sector information block structure.  Obtained from CPCWiki.
+
+The *sector size* is calculated as in the TIB.
+
+   The sector information block is represented by the class
+‘Disks::MV:SectorInformationBlock’.  The sector itself is another class:
+‘Disks::MV::Sector’.
+
+
+File: DSK-structure.info,  Node: Directory,  Next: Blocks,  Prev: Disk image,  Up: Top
+
+2 Directory
+***********
+
+The directory is a list of files positioned at the begining of the disk
+(at track 2 usually).  Each directory entry has 32 bytes with the
+following meaning:
+
+Bytes   0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
+----------------------------------------------------------------------------------------
+        St   F0   F1   F2   F3   F4   F5   F6   F7   E0   E1   E2   Xl   Bc   Xh   Rc
+        Al   Al   Al   Al   Al   Al   Al   Al   Al   Al   Al   Al   Al   Al   Al   Al
+
+Table 2.1: 
+St
+     The status value and file's user number.
+F0-F7
+     The file name and file attributes at the highest bit of each byte.
+E0-E2
+     The file extension and file attributes at the highest bit of each
+     byte.
+Xl
+     Extent number, lower byte.
+Bc
+     Number of bytes used in last record.
+Xh
+     Extent number, higher byte.
+Rc
+     Number of 128 byte records of the last used logical extent.
+Al
+     16 bytes of Block pointers.
+
+   See the Disk Structure article at CPCWiki
+(https://www.cpcwiki.eu/index.php/Disk_structure) for more information.
+
+* Menu:
+
+* St - Status value::
+* F0-F7 and E0-E2 - Filename::
+* Xl and Xh - Extent number::
+* Rc - Bytes used::
+* Al - Pointers::
+* File size calculation::
+
+
+File: DSK-structure.info,  Node: St - Status value,  Next: F0-F7 and E0-E2 - Filename,  Up: Directory
+
+2.1 St - Status value
+=====================
+
+0     15    File: user number
+16    31    File: user number (P2DOS) or password extent
+32    32    Disk label
+33    33    Time stamp (P2DOS)
+229   229   Erased or unused (hex: 0xE5)
+
+Table 2.2: Value of the St byte.
+
+
+File: DSK-structure.info,  Node: F0-F7 and E0-E2 - Filename,  Next: Xl and Xh - Extent number,  Prev: St - Status value,  Up: Directory
+
+2.2 F0-F7 and E0-E2 - Filename
+==============================
+
+The highest bit of the filename characters are the attribute.
+
+Character   Description
+------------------------------------------------------------------
+F0          Wheel byte
+F1          Public file (P2DOS, ZSDOS), foreground-only command
+F2          Date stamp (ZSDOS), background-only command
+F7          Wheel protect (ZSDOS)
+E0          Read-only file
+E1          System file
+E2          Archived
+
+Table 2.3: File name highest bit meanings.
+
+
+File: DSK-structure.info,  Node: Xl and Xh - Extent number,  Next: Rc - Bytes used,  Prev: F0-F7 and E0-E2 - Filename,  Up: Directory
+
+2.3 Xl and Xh - Extent number
+=============================
+
+One file can use more than one directory entry.
+
+
+File: DSK-structure.info,  Node: Rc - Bytes used,  Next: Al - Pointers,  Prev: Xl and Xh - Extent number,  Up: Directory
+
+2.4 Rc - Bytes used
+===================
+
+This is the bytes used by this extent.
+
+   The total bytes (T) used in the extent is calculated as ().
+
+
+File: DSK-structure.info,  Node: Al - Pointers,  Next: File size calculation,  Prev: Rc - Bytes used,  Up: Directory
+
+2.5 Al - Pointers
+=================
+
+The pointers established which blocks stores the file.  The offset
+address stored at the pointer value can be calculated as , where is the
+directory address.  The offset does not consider track and
+
+   The directory is considered to start at block 0.  It is the first
+byte, but considering the track and disk information block, it should be
+at address 0x1500 under usual circumstances (sector size of 512 and 9
+sectors per track, 512 × 9 = 4608 bytes per track).
+
+
+File: DSK-structure.info,  Node: File size calculation,  Prev: Al - Pointers,  Up: Directory
+
+2.6 File size calculation
+=========================
+
+In overall, considering that is the pointers count, is the block size
+and is the value in the Rc field.  The file size in bytes is calculated
+as follows.
+
+   ⚠ The CAT command provides sizes in KB (or Kb).
+
+   ⚠ The result is an approximated value.
+
+
+File: DSK-structure.info,  Node: Blocks,  Next: Bibliography,  Prev: Directory,  Up: Top
+
+3 Blocks
+********
+
+The data (without headers) is divided by blocks.  The block size can be
+1024, 2048, 4096, 8192 or 16384, but the usual value is 2048.
+
+
+File: DSK-structure.info,  Node: Bibliography,  Prev: Blocks,  Up: Top
+
+4 Bibliography
+**************
+
+   • "Disk image file format".  CPCWiki document.
+
+     <https://cpctech.cpcwiki.de/docs/dsk.html>
+
+     Visited April 19, 2024.
+
+   • "Format:DSK disk image file format".  CPCWiki article.
+
+     <https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format>
+
+     Visited April 19, 2024.
+
+   • "Disk Structure".  CPCWiki.
+
+     <https://www.cpcwiki.eu/index.php/Disk_structure>
+
+     Visited April 19, 2024.
+
+
+
+Tag Table:
+Node: Top231
+Node: Disk image737
+Node: Implementation Conventions1552
+Node: Disk Information Block (DIB)2982
+Ref: tabinfo-block3824
+Node: Track information block (TIB)4243
+Ref: org52f127a5989
+Node: Sector Information Block (SIB)6677
+Ref: orgf25ed7f6870
+Node: Directory7480
+Ref: org02aa5627753
+Node: St - Status value8823
+Ref: org07baf478973
+Node: F0-F7 and E0-E2 - Filename9190
+Ref: org0e377969455
+Node: Xl and Xh - Extent number9840
+Node: Rc - Bytes used10087
+Node: Al - Pointers10356
+Node: File size calculation10978
+Node: Blocks11381
+Node: Bibliography11627
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:
