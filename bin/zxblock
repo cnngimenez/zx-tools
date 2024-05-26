@@ -19,8 +19,8 @@
 
 # frozen_string_literal: true
 
-require_relative '../source/disks/mv/disk'
-require_relative '../source/disks/cpm'
+require 'zxtools/disks/mv/disk'
+require 'zxtools/disks/cpm'
 
 if ARGV.empty?
 end

@@ -19,7 +19,7 @@
 
 # frozen_string_literal: true
 
-require_relative '../source/disks/mv/disk'
+require 'zxtools/disks/mv/disk'
 
 if ARGV.empty?
   puts 'List tracks in a disk file.\n'
