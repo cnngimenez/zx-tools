@@ -24,19 +24,50 @@ require_relative '../source/disks/cpm'
 
 if ARGV.empty?
   puts 'Show directory listing from a diskette image.'
+  puts
+  puts 'List filenames, extensions, approximate size, attributes, last saved'
+  puts 'bytes and block pointers.'
+  puts
+  puts 'Attributes: R = read-only, S = system file, and A = archived.'
+  puts
   puts 'Synopsis:'
   puts '          listdir DISKFILE'
   exit
 end
 
+def show_entry(entry)
+  r =  if entry.read_only
+         "R"
+       else
+         "-"
+       end
+  s = if entry.system_file
+        "S"
+      else
+        "-"
+      end
+  a = if entry.archived
+        "A"
+      else
+        "-"
+      end
+  size = entry.file_size(0x400).to_s.concat("B").ljust(7)
+  last = entry.last_bytes.to_s.ljust(3)
+  
+  print "#{entry.filename.ljust(8)}"
+  print ".#{entry.extension.ljust(3)}"
+  print " #{size}"
+  print " #{r}#{s}#{a}"
+  print " #{last} "
+  entry.pointers.each do |pointer|
+    print "#{pointer} "
+  end
+  print "\n"
+end
+
 @d = Disks::MV2::Disk.from_bin File.binread(ARGV[0])
 @directory = CPM::Directory.from_bin @d.tracks[1].sectors[0].real_data
+puts "name    .ext ~size   RSA last Block_Pointers"
 @directory.entries.each do |entry|
-  s = "#{entry.filename.ljust(8)}"
-  s += ".#{entry.extension.ljust(3)}"
-  s += "     #{entry.file_size(0x400)}B"
-  s += "R" if entry.read_only
-  s += "S" if entry.system_file
-  s += "A" if entry.archived
-  puts s
+  show_entry entry
 end

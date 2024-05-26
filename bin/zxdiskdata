@@ -2,7 +2,7 @@
 
 # Copyright 2024 Christian Gimenez
 #
-# zxtracks
+# zxdiskdata
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,31 +22,8 @@
 require_relative '../source/disks/mv/disk'
 
 if ARGV.empty?
-  puts 'List tracks in a disk file.\n'
-  puts 'Disk file required\n'
-  puts 'Synopsis:'
-  puts '          zktracks DISKFILE'
-  exit
-end
-
-def show_tib(tib)
-  puts "-- Track Info --"
-  puts "Number: #{tib.number}"
-  puts "Side: #{tib.side}"
-  puts "Sector size: #{tib.sector_size}"
-  puts "Sector count: #{tib.sector_count}"
-  puts "GAP3 length: #{tib.gap_3_length}"
-  puts "Filler byte: #{tib.filler_byte.inspect}"
 end
 
 @d = Disks::MV2::Disk.from_bin File.binread ARGV[0]
-track_count = @d.dib.track_count
-side_count = @d.dib.side_count
-track_size = @d.dib.track_size
+print @d.data
 
-puts "Disk has #{side_count} side/s, with #{track_count} track/s."
-puts "Track size is #{track_size} bytes."
-
-track_count.times do |num|
-  show_tib  @d.tracks[num].tib
-end
