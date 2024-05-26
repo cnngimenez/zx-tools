@@ -29,6 +29,15 @@ module Disks
 
       attr_accessor :dib, :tracks
 
+      def data
+        data = ""
+        @tracks.each do |track|
+          data.concat track.data
+        end
+
+        data
+      end
+
       def to_bin
         data = @dib.to_bin
         @tracks.each do |track|
