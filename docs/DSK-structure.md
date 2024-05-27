@@ -1,23 +1,24 @@
 
 # Table of Contents
 
-1.  [Disk image](#orgdd1d484)
-    1.  [Implementation Conventions](#orgd528a19)
-    2.  [Disk Information Block (DIB)](#orgb93542f)
-    3.  [Track information block (TIB)](#org9833cc7)
-    4.  [Sector Information Block (SIB)](#orgb9b6070)
-2.  [Directory](#org62d7122)
-    1.  [St - Status value](#orge1af1e9)
-    2.  [F0-F7 and E0-E2 - Filename](#orge9924a5)
-    3.  [Xl and Xh - Extent number](#org0d47f84)
-    4.  [Rc - Bytes used](#org4afe386)
-    5.  [Al - Pointers](#org8b80545)
-    6.  [File size calculation](#orgc05be87)
-3.  [Blocks](#org3e3f87d)
-4.  [Bibliography](#org08acbc7)
+1.  [Disk image](#org5c61927)
+    1.  [Implementation Conventions](#org8e42390)
+    2.  [Disk Information Block (DIB)](#orge664ece)
+    3.  [Track information block (TIB)](#orge903c49)
+    4.  [Sector Information Block (SIB)](#orgacab65f)
+2.  [Directory](#org872089a)
+    1.  [St - Status value](#orgfb1ccf1)
+    2.  [F0-F7 and E0-E2 - Filename](#orgd450b5a)
+    3.  [Xl and Xh - Extent number](#org2f37018)
+    4.  [Rc - Bytes used](#org708043e)
+    5.  [Al - Pointers](#orgcd1ccae)
+    6.  [File size calculation](#org74df1c7)
+3.  [Blocks](#org2abb7ed)
+4.  [Plus3DOS Files](#orgec39701)
+5.  [Bibliography](#org71094fd)
 
 
-<a id="orgdd1d484"></a>
+<a id="org5c61927"></a>
 
 # Disk image
 
@@ -30,7 +31,7 @@ The dsk format is a hardware representation. A disk is divided in sides, which i
 On the file image, each track and each sector has a header or an "information block". It describes their representation. For instance, the track/sector size, the current track and side number, etc. The track information block is at the begining of each track, but the sector information block is inside the information block (not at the begining of the sector).
 
 
-<a id="orgd528a19"></a>
+<a id="org8e42390"></a>
 
 ## Implementation Conventions
 
@@ -45,17 +46,17 @@ The **number conventions** are the following:
 -   Sector id number starts with 1. In binary data starts with 1.
 
 
-<a id="orgb93542f"></a>
+<a id="orge664ece"></a>
 
 ## Disk Information Block (DIB)
 
 The Information Block is the first structure found on a disk file. To identify it from other files, the MV String first 8 bytes can be used, which is "MV - CPC". The complete MV String is: `"MV - CPCEMU Disk-File\r\nDisk-Info\r\n"` (without ending zero char).
 
-The block structure is described at Table [1](#org446f5ad). Its size is 256 (100<sub>16</sub>) bytes, which it starts at byte 0, and ends at byte 100<sub>16</sub>
+The block structure is described at Table [1](#org30285e8). Its size is 256 (100<sub>16</sub>) bytes, which it starts at byte 0, and ends at byte 100<sub>16</sub>
 
 The **size of track** filed is expressed with little-endian representation. Thus, low byte is followed by the high byte. Its usual value is 4864 bytes (`"\x00\x13"` as a Ruby string).
 
-<table id="org446f5ad" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="org30285e8" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 <caption class="t-above"><span class="table-number">Table 1:</span> Information block structure. <a href="https://cpctech.cpcwiki.de/docs/dsk.html">Obtained from CPCWiki</a>.</caption>
 
 <colgroup>
@@ -120,7 +121,7 @@ The **size of track** filed is expressed with little-endian representation. Thus
 The disk information block is represented by the class `Disks::MV::DiskInformationBlock`. 
 
 
-<a id="org9833cc7"></a>
+<a id="orge903c49"></a>
 
 ## Track information block (TIB)
 
@@ -229,7 +230,7 @@ The **sector information list** has one Sector Information Block structure per n
 The track information block is represented by the class `Disks::MV:TrackInformationBlock`. The track itself is another class: `Disks::MV::Track`.
 
 
-<a id="orgb9b6070"></a>
+<a id="orgacab65f"></a>
 
 ## Sector Information Block (SIB)
 
@@ -307,7 +308,7 @@ The **sector size** is calculated as in the TIB.
 The sector information block is represented by the class `Disks::MV:SectorInformationBlock`. The sector itself is another class: `Disks::MV::Sector`.
 
 
-<a id="org62d7122"></a>
+<a id="org872089a"></a>
 
 # Directory
 
@@ -431,7 +432,7 @@ The directory is a list of files positioned at the begining of the disk (at trac
 See the [Disk Structure article at CPCWiki](https://www.cpcwiki.eu/index.php/Disk_structure) for more information.
 
 
-<a id="orge1af1e9"></a>
+<a id="orgfb1ccf1"></a>
 
 ## St - Status value
 
@@ -483,7 +484,7 @@ See the [Disk Structure article at CPCWiki](https://www.cpcwiki.eu/index.php/Dis
 </table>
 
 
-<a id="orge9924a5"></a>
+<a id="orgd450b5a"></a>
 
 ## F0-F7 and E0-E2 - Filename
 
@@ -549,14 +550,14 @@ The highest bit of the filename characters are the attribute.
 </table>
 
 
-<a id="org0d47f84"></a>
+<a id="org2f37018"></a>
 
 ## Xl and Xh - Extent number
 
 One file can use more than one directory entry.
 
 
-<a id="org4afe386"></a>
+<a id="org708043e"></a>
 
 ## Rc - Bytes used
 
@@ -565,7 +566,7 @@ This is the bytes used by this extent.
 The total bytes (T) used in the extent is calculated as $T = Rc \times{} 80_{16}$ ($T = Rc \times{}  126$).
 
 
-<a id="org8b80545"></a>
+<a id="orgcd1ccae"></a>
 
 ## Al - Pointers
 
@@ -574,7 +575,7 @@ The pointers established which blocks stores the file. The offset address stored
 The directory is considered to start at block 0. It is the first byte, but considering the track and disk information block, it should be at address 0x1500 under usual circumstances (sector size of 512 and 9 sectors per track, 512 &times; 9 = 4608 bytes per track).
 
 
-<a id="orgc05be87"></a>
+<a id="org74df1c7"></a>
 
 ## File size calculation
 
@@ -587,14 +588,21 @@ $$(Pc - 1) \times{} Bz + Rc \times{} 128$$
 &#9888;&#65039; The result is an approximated value.
 
 
-<a id="org3e3f87d"></a>
+<a id="org2abb7ed"></a>
 
 # Blocks
 
 The data (without headers) is divided by blocks. The block size can be 1024, 2048, 4096, 8192 or 16384, but the usual value is 2048.
 
 
-<a id="org08acbc7"></a>
+<a id="orgec39701"></a>
+
+# Plus3DOS Files
+
+Information about the header is at [Chapter 8 of ZX Spectrum +3 manual](https://worldofspectrum.org/ZXSpectrum128+3Manual/chapter8pt27.html).
+
+
+<a id="org71094fd"></a>
 
 # Bibliography
 

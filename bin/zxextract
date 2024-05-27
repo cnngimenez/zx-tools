@@ -32,10 +32,10 @@ end
 
 @d = ZXTools::MV2::Disk.from_bin File.binread ARGV[0]
 @directory = ZXTools::CPM::Directory.from_bin @d.tracks[1].sectors[0].real_data
- 
-@target = if Dir.exists? ARGV[1]
+
+@target = if Dir.exist? ARGV[1]
             Dir.new ARGV[1]
-          else            
+          else
             Dir.mkdir ARGV[1]
           end
 puts "Output: #{@target.to_path}"
@@ -43,18 +43,20 @@ puts "Output: #{@target.to_path}"
 blocks = ZXTools::CPM::Block.from_bin @d.data[0x1200..-1]
 
 @directory.entries.each do |entry|
-  name = @target.to_path + '/' + entry.filename_real
+  name = "#{@target.to_path}/#{entry.filename_real}"
 
   print "Creating \"#{name}\" pointers: #{entry.pointers}..."
 
-  
   entry_blocks = entry.pointers.map do |pointer|
     blocks[pointer]
   end
 
+  # TODO: Use entry.last_bytes bytes from the last block
+  # entry_blocks.last.data = entry_blocks.last.data[0..entry.last_bytes]
+
   output_data = entry_blocks.map(&:data).join
   print "#{output_data.length} bytes ..."
-  
+
   f = File.new name, 'w'
   f.write output_data
   f.close

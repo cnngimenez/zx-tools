@@ -17,6 +17,7 @@ DSK-structure
 * Disk image::
 * Directory::
 * Blocks::
+* Plus3DOS Files::
 * Bibliography::
 
 -- The Detailed Node Listing --
@@ -334,7 +335,7 @@ as follows.
    ⚠ The result is an approximated value.
 
 
-File: DSK-structure.info,  Node: Blocks,  Next: Bibliography,  Prev: Directory,  Up: Top
+File: DSK-structure.info,  Node: Blocks,  Next: Plus3DOS Files,  Prev: Directory,  Up: Top
 
 3 Blocks
 ********
@@ -343,9 +344,18 @@ The data (without headers) is divided by blocks.  The block size can be
 1024, 2048, 4096, 8192 or 16384, but the usual value is 2048.
 
 
-File: DSK-structure.info,  Node: Bibliography,  Prev: Blocks,  Up: Top
+File: DSK-structure.info,  Node: Plus3DOS Files,  Next: Bibliography,  Prev: Blocks,  Up: Top
 
-4 Bibliography
+4 Plus3DOS Files
+****************
+
+Information about the header is at Chapter 8 of ZX Spectrum +3 manual
+(https://worldofspectrum.org/ZXSpectrum128+3Manual/chapter8pt27.html).
+
+
+File: DSK-structure.info,  Node: Bibliography,  Prev: Plus3DOS Files,  Up: Top
+
+5 Bibliography
 **************
 
    • "Disk image file format".  CPCWiki document.
@@ -370,26 +380,27 @@ File: DSK-structure.info,  Node: Bibliography,  Prev: Blocks,  Up: Top
 
 Tag Table:
 Node: Top231
-Node: Disk image737
-Node: Implementation Conventions1552
-Node: Disk Information Block (DIB)2982
-Ref: tabinfo-block3824
-Node: Track information block (TIB)4243
-Ref: org52f127a5989
-Node: Sector Information Block (SIB)6677
-Ref: orgf25ed7f6870
-Node: Directory7480
-Ref: org02aa5627753
-Node: St - Status value8823
-Ref: org07baf478973
-Node: F0-F7 and E0-E2 - Filename9190
-Ref: org0e377969455
-Node: Xl and Xh - Extent number9840
-Node: Rc - Bytes used10087
-Node: Al - Pointers10356
-Node: File size calculation10978
-Node: Blocks11381
-Node: Bibliography11627
+Node: Disk image756
+Node: Implementation Conventions1571
+Node: Disk Information Block (DIB)3001
+Ref: tabinfo-block3843
+Node: Track information block (TIB)4262
+Ref: org6c275306008
+Node: Sector Information Block (SIB)6696
+Ref: org36770676889
+Node: Directory7499
+Ref: orge8458a67772
+Node: St - Status value8842
+Ref: org19de1ae8992
+Node: F0-F7 and E0-E2 - Filename9209
+Ref: orgaa2e2fc9474
+Node: Xl and Xh - Extent number9859
+Node: Rc - Bytes used10106
+Node: Al - Pointers10375
+Node: File size calculation10997
+Node: Blocks11400
+Node: Plus3DOS Files11648
+Node: Bibliography11922
 
 End Tag Table
 

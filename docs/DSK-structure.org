@@ -1,4 +1,4 @@
-g
+
 * Disk image
 The dsk format is a hardware representation. A disk is divided in sides, which in turn it has tracks and each track has sectors.
 
@@ -159,6 +159,10 @@ $$(Pc - 1) \times{} Bz + Rc \times{} 128$$
 * Blocks
 The data (without headers) is divided by blocks. The block size can be 1024, 2048, 4096, 8192 or 16384, but the usual value is 2048.
 
+
+* Plus3DOS Files
+
+Information about the header is at [[https://worldofspectrum.org/ZXSpectrum128+3Manual/chapter8pt27.html][Chapter 8 of ZX Spectrum +3 manual]].
 
 * Bibliography
 
