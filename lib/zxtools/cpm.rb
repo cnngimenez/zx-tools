@@ -80,6 +80,20 @@ module ZXTools
       attr_accessor :status, :filename, :extension, :pointers,
                     :read_only, :system_file, :archived
 
+      # Filename without spaces.
+      #
+      # Return a usable filename for the host.
+      #
+      # @return [String]
+      def filename_real
+        ext = if @extension.empty?
+                ''
+              else
+                ".#{@extension}"
+              end
+        @filename + ext
+      end
+      
       def file_size(block_size)
         blocks = @pointers.count(&:nonzero?)
         (blocks - 1) * block_size + @last_bytes * 0x100

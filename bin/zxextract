@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+
+# Copyright 2024 Christian Gimenez
+#
+# zxextract
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# frozen_string_literal: true
+
+require 'zxtools'
+
+if ARGV.empty?
+  puts 'Extract all files in a diskette image into a directory.'
+  puts
+  puts 'Synospis:'
+  puts '         zxextract DISKFILE OUTPUT_DIRECTORY'
+  puts
+  exit
+end
+
+@d = ZXTools::MV2::Disk.from_bin File.binread ARGV[0]
+@directory = ZXTools::CPM::Directory.from_bin @d.tracks[1].sectors[0].real_data
+ 
+@target = if Dir.exists? ARGV[1]
+            Dir.new ARGV[1]
+          else            
+            Dir.mkdir ARGV[1]
+          end
+puts "Output: #{@target.to_path}"
+
+blocks = ZXTools::CPM::Block.from_bin @d.data[0x1200..-1]
+
+@directory.entries.each do |entry|
+  name = @target.to_path + '/' + entry.filename_real
+
+  print "Creating \"#{name}\" pointers: #{entry.pointers}..."
+
+  
+  entry_blocks = entry.pointers.map do |pointer|
+    blocks[pointer]
+  end
+
+  output_data = entry_blocks.map(&:data).join
+  print "#{output_data.length} bytes ..."
+  
+  f = File.new name, 'w'
+  f.write output_data
+  f.close
+
+  puts 'done'
+end
