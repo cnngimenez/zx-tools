@@ -103,8 +103,8 @@ File: DSK-structure.info,  Node: Disk Information Block (DIB),  Next: Track info
 
 The Information Block is the first structure found on a disk file.  To
 identify it from other files, the MV String first 8 bytes can be used,
-which is "MV - CPC". The complete MV String is: ‘"MV - CPCEMU
-Disk-File\r\nDisk-Info\r\n"’ (without ending zero char).
+which is "‘MV - CPC’".  The complete MV String is: "‘MV - CPCEMU
+Disk-File\r\nDisk-Info\r\n’" (without ending zero char).
 
    The block structure is described at Table *note Table 1.1:
 tabinfo-block.  Its size is 256 (100_16) bytes, which it starts at byte
@@ -134,9 +134,9 @@ File: DSK-structure.info,  Node: Track information block (TIB),  Next: Sector In
 1.3 Track information block (TIB)
 =================================
 
-The *Track String* is "Track-Info\0".  Comparing to the MV String of a
-Disk Information Block, in this case a zero character must be added to
-the end, to complete the field length of 13 bytes.
+The *Track String* is "‘Track-Info\r\n\0’".  Comparing to the MV String
+of a Disk Information Block, in this case a zero character must be added
+to the end, to complete the field length of 13 bytes.
 
    The *sector size* field size is 1 byte.  Therefore, it is a number
 between 0 to 255, which it cannot specify the complete size in bytes of
@@ -259,11 +259,13 @@ File: DSK-structure.info,  Node: St - Status value,  Next: F0-F7 and E0-E2 - Fil
 2.1 St - Status value
 =====================
 
-0     15    File: user number
-16    31    File: user number (P2DOS) or password extent
-32    32    Disk label
-33    33    Time stamp (P2DOS)
-229   229   Erased or unused (hex: 0xE5)
+From   To    Description
+------------------------------------------------------------
+0      15    File: user number
+16     31    File: user number (P2DOS) or password extent
+32     32    Disk label
+33     33    Time stamp (P2DOS)
+229    229   Erased or unused (hex: 0xE5)
 
 Table 2.2: Value of the St byte.
 
@@ -349,7 +351,55 @@ File: DSK-structure.info,  Node: Plus3DOS Files,  Next: Bibliography,  Prev: Blo
 4 Plus3DOS Files
 ****************
 
-Information about the header is at Chapter 8 of ZX Spectrum +3 manual
+offset   description           bytes
+---------------------------------------
+0        +3DOS sinature        8
+8        Soft EOF              1
+9        Issue number          1
+10       Version number        1
+11       Length of file        4
+15       +3 BASIC header       8
+23       Reserved (set to 0)   104
+127      Checksum              1
+
+Table 4.1: Header of +3DOS files.
+
+The *+3DOS signature* is an 8 byte string.  Its value is "PLUS3DOS". The
+*issue and version number* is used to check for compatibility.  The
+correct version of the system DOS and the file DOS shoud be used.
+
+   The *checksum* is calculated as follows, be the i-th byte from the
+header:
+
+   The following hexadecimal dump of a file shows the header at the
+first 128 (80_16) bytes.  The checksum specified at the 127th byte is
+f1.
+
+     00000000: 504c 5553 3344 4f53 1a01 0080 1b00 0003  PLUS3DOS........
+     00000010: 001b 0040 0080 0000 0000 0000 0000 0000  ...@............
+     00000020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+     00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+     00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+     00000050: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+     00000060: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+     00000070: 0000 0000 0000 0000 0000 0000 0000 00f1  ................
+     00000080:
+
+Listing 4.1: A +3DOS header file expressed in hexadecimal bytes.
+
+   To check the value, an Elisp code is used to calculate the checksum.
+The code sums all byte values (excluded several ‘#x00’ bytes).  Then,
+‘mod’ is applied with 256.  The result is 241 (F1_16).
+
+     (format "%x"
+             (mod
+              (+ #x50 #x4c #x55 #x53 #x33 #x44 #x4f #x53 #x1a #x01 #x00 #x80 #x1b #x00 #x00 #x03
+                 #x1b #x00 #x40 #x00 #x80 )
+              256))
+
+Listing 4.2: Elisp calculation example.
+
+   Information about the header is at Chapter 8 of ZX Spectrum +3 manual
 (https://worldofspectrum.org/ZXSpectrum128+3Manual/chapter8pt27.html).
 
 
@@ -383,24 +433,27 @@ Node: Top231
 Node: Disk image756
 Node: Implementation Conventions1571
 Node: Disk Information Block (DIB)3001
-Ref: tabinfo-block3843
-Node: Track information block (TIB)4262
-Ref: org6c275306008
-Node: Sector Information Block (SIB)6696
-Ref: org36770676889
-Node: Directory7499
-Ref: orge8458a67772
-Node: St - Status value8842
-Ref: org19de1ae8992
-Node: F0-F7 and E0-E2 - Filename9209
-Ref: orgaa2e2fc9474
-Node: Xl and Xh - Extent number9859
-Node: Rc - Bytes used10106
-Node: Al - Pointers10375
-Node: File size calculation10997
-Node: Blocks11400
-Node: Plus3DOS Files11648
-Node: Bibliography11922
+Ref: tabinfo-block3850
+Node: Track information block (TIB)4269
+Ref: org848add36025
+Node: Sector Information Block (SIB)6713
+Ref: orgbfc7f9f6906
+Node: Directory7516
+Ref: org343bca87789
+Node: St - Status value8859
+Ref: org0bbcaa09009
+Node: F0-F7 and E0-E2 - Filename9317
+Ref: org93fc9a59582
+Node: Xl and Xh - Extent number9967
+Node: Rc - Bytes used10214
+Node: Al - Pointers10483
+Node: File size calculation11105
+Node: Blocks11508
+Node: Plus3DOS Files11756
+Ref: org0f9179211888
+Ref: orgeca951112697
+Ref: org15a0d6013569
+Node: Bibliography13953
 
 End Tag Table
 

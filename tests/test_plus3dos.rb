@@ -1,6 +1,6 @@
 # Copyright 2024 Christian Gimenez
 #
-# zxtools.rb
+# test_plus3dos.rb
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,10 +17,17 @@
 
 # frozen_string_literal: true
 
-# The ZXTools module.
-module ZXTools
-end
+require 'minitest/autorun'
+require 'zxtools'
 
-require_relative 'zxtools/mv2'
-require_relative 'zxtools/cpm'
-require_relative 'zxtools/plus3dos'
+class TestPlus3DOS < Minitest::Test
+  def test_to_bin
+    data = File.binread 'tests/data/test.dsk', 0x80, 0x1d00
+    header = ZXTools::Plus3DOS::Header.new
+    header.length = 0x8c
+    header.basic_header = "\0\x0c\0\0\x80\x0c\0\0"
+    header.make_checksum!
+
+    assert_equal data.bytes, header.to_bin.bytes
+  end
+end

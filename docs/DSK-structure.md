@@ -1,24 +1,24 @@
 
 # Table of Contents
 
-1.  [Disk image](#org5c61927)
-    1.  [Implementation Conventions](#org8e42390)
-    2.  [Disk Information Block (DIB)](#orge664ece)
-    3.  [Track information block (TIB)](#orge903c49)
-    4.  [Sector Information Block (SIB)](#orgacab65f)
-2.  [Directory](#org872089a)
-    1.  [St - Status value](#orgfb1ccf1)
-    2.  [F0-F7 and E0-E2 - Filename](#orgd450b5a)
-    3.  [Xl and Xh - Extent number](#org2f37018)
-    4.  [Rc - Bytes used](#org708043e)
-    5.  [Al - Pointers](#orgcd1ccae)
-    6.  [File size calculation](#org74df1c7)
-3.  [Blocks](#org2abb7ed)
-4.  [Plus3DOS Files](#orgec39701)
-5.  [Bibliography](#org71094fd)
+1.  [Disk image](#org65d4ff7)
+    1.  [Implementation Conventions](#org3d78bc9)
+    2.  [Disk Information Block (DIB)](#orgf82d7f0)
+    3.  [Track information block (TIB)](#org74c7412)
+    4.  [Sector Information Block (SIB)](#org599bce8)
+2.  [Directory](#orgf5baa17)
+    1.  [St - Status value](#orgbc3b4d0)
+    2.  [F0-F7 and E0-E2 - Filename](#orgde2aee2)
+    3.  [Xl and Xh - Extent number](#org3b61365)
+    4.  [Rc - Bytes used](#orgbe7a7c5)
+    5.  [Al - Pointers](#orgfb2df6e)
+    6.  [File size calculation](#orgbcbbaaa)
+3.  [Blocks](#orge5bf1a5)
+4.  [Plus3DOS Files](#org5163166)
+5.  [Bibliography](#org4eeab7e)
 
 
-<a id="org5c61927"></a>
+<a id="org65d4ff7"></a>
 
 # Disk image
 
@@ -28,10 +28,10 @@ The dsk format is a hardware representation. A disk is divided in sides, which i
     -   tracks
         -   sectors
 
-On the file image, each track and each sector has a header or an "information block". It describes their representation. For instance, the track/sector size, the current track and side number, etc. The track information block is at the begining of each track, but the sector information block is inside the information block (not at the begining of the sector).
+On the file image, each track and each sector has a header or an &ldquo;information block&rdquo;. It describes their representation. For instance, the track/sector size, the current track and side number, etc. The track information block is at the begining of each track, but the sector information block is inside the information block (not at the begining of the sector).
 
 
-<a id="org8e42390"></a>
+<a id="org3d78bc9"></a>
 
 ## Implementation Conventions
 
@@ -46,17 +46,17 @@ The **number conventions** are the following:
 -   Sector id number starts with 1. In binary data starts with 1.
 
 
-<a id="orge664ece"></a>
+<a id="orgf82d7f0"></a>
 
 ## Disk Information Block (DIB)
 
-The Information Block is the first structure found on a disk file. To identify it from other files, the MV String first 8 bytes can be used, which is "MV - CPC". The complete MV String is: `"MV - CPCEMU Disk-File\r\nDisk-Info\r\n"` (without ending zero char).
+The Information Block is the first structure found on a disk file. To identify it from other files, the MV String first 8 bytes can be used, which is &ldquo;`MV - CPC`&rdquo;. The complete MV String is: &ldquo;`MV - CPCEMU Disk-File\r\nDisk-Info\r\n`&rdquo; (without ending zero char).
 
-The block structure is described at Table [1](#org30285e8). Its size is 256 (100<sub>16</sub>) bytes, which it starts at byte 0, and ends at byte 100<sub>16</sub>
+The block structure is described at Table [1](#org1a580be). Its size is 256 (100<sub>16</sub>) bytes, which it starts at byte 0, and ends at byte 100<sub>16</sub>
 
 The **size of track** filed is expressed with little-endian representation. Thus, low byte is followed by the high byte. Its usual value is 4864 bytes (`"\x00\x13"` as a Ruby string).
 
-<table id="org30285e8" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="org1a580be" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 <caption class="t-above"><span class="table-number">Table 1:</span> Information block structure. <a href="https://cpctech.cpcwiki.de/docs/dsk.html">Obtained from CPCWiki</a>.</caption>
 
 <colgroup>
@@ -121,11 +121,11 @@ The **size of track** filed is expressed with little-endian representation. Thus
 The disk information block is represented by the class `Disks::MV::DiskInformationBlock`. 
 
 
-<a id="orge903c49"></a>
+<a id="org74c7412"></a>
 
 ## Track information block (TIB)
 
-The **Track String** is "Track-Info\r\n\\0". Comparing to the MV String of a Disk Information Block, in this case a zero character must be added to the end, to complete the field length of 13 bytes. 
+The **Track String** is &ldquo;`Track-Info\r\n\0`&rdquo;. Comparing to the MV String of a Disk Information Block, in this case a zero character must be added to the end, to complete the field length of 13 bytes. 
 
 The **sector size** field size is 1 byte. Therefore, it is a number between 0 to 255, which it cannot specify the complete size in bytes of the sector. This byte value must be multiplied by 256 according to CPCWiki (see [CPCWiki article](https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format&mobileaction=toggle_view_desktop)). The usual value is 2 (512 bytes or 200<sub>16</sub> bytes).
 
@@ -230,7 +230,7 @@ The **sector information list** has one Sector Information Block structure per n
 The track information block is represented by the class `Disks::MV:TrackInformationBlock`. The track itself is another class: `Disks::MV::Track`.
 
 
-<a id="orgacab65f"></a>
+<a id="org599bce8"></a>
 
 ## Sector Information Block (SIB)
 
@@ -308,7 +308,7 @@ The **sector size** is calculated as in the TIB.
 The sector information block is represented by the class `Disks::MV:SectorInformationBlock`. The sector itself is another class: `Disks::MV::Sector`.
 
 
-<a id="org872089a"></a>
+<a id="orgf5baa17"></a>
 
 # Directory
 
@@ -420,7 +420,7 @@ The directory is a list of files positioned at the begining of the disk (at trac
 </tbody>
 </table>
 
--   **St:** The status value and file's user number.
+-   **St:** The status value and file&rsquo;s user number.
 -   **F0-F7:** The file name and file attributes at the highest bit of each byte.
 -   **E0-E2:** The file extension and file attributes at the highest bit of each byte.
 -   **Xl:** Extent number, lower byte.
@@ -432,7 +432,7 @@ The directory is a list of files positioned at the begining of the disk (at trac
 See the [Disk Structure article at CPCWiki](https://www.cpcwiki.eu/index.php/Disk_structure) for more information.
 
 
-<a id="orgfb1ccf1"></a>
+<a id="orgbc3b4d0"></a>
 
 ## St - Status value
 
@@ -446,6 +446,14 @@ See the [Disk Structure article at CPCWiki](https://www.cpcwiki.eu/index.php/Dis
 
 <col  class="org-left" />
 </colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">From</th>
+<th scope="col" class="org-right">To</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+
 <tbody>
 <tr>
 <td class="org-right">0</td>
@@ -484,7 +492,7 @@ See the [Disk Structure article at CPCWiki](https://www.cpcwiki.eu/index.php/Dis
 </table>
 
 
-<a id="orgd450b5a"></a>
+<a id="orgde2aee2"></a>
 
 ## F0-F7 and E0-E2 - Filename
 
@@ -550,14 +558,14 @@ The highest bit of the filename characters are the attribute.
 </table>
 
 
-<a id="org2f37018"></a>
+<a id="org3b61365"></a>
 
 ## Xl and Xh - Extent number
 
 One file can use more than one directory entry.
 
 
-<a id="org708043e"></a>
+<a id="orgbe7a7c5"></a>
 
 ## Rc - Bytes used
 
@@ -566,7 +574,7 @@ This is the bytes used by this extent.
 The total bytes (T) used in the extent is calculated as $T = Rc \times{} 80_{16}$ ($T = Rc \times{}  126$).
 
 
-<a id="orgcd1ccae"></a>
+<a id="orgfb2df6e"></a>
 
 ## Al - Pointers
 
@@ -575,7 +583,7 @@ The pointers established which blocks stores the file. The offset address stored
 The directory is considered to start at block 0. It is the first byte, but considering the track and disk information block, it should be at address 0x1500 under usual circumstances (sector size of 512 and 9 sectors per track, 512 &times; 9 = 4608 bytes per track).
 
 
-<a id="org74df1c7"></a>
+<a id="orgbcbbaaa"></a>
 
 ## File size calculation
 
@@ -588,37 +596,139 @@ $$(Pc - 1) \times{} Bz + Rc \times{} 128$$
 &#9888;&#65039; The result is an approximated value.
 
 
-<a id="org2abb7ed"></a>
+<a id="orge5bf1a5"></a>
 
 # Blocks
 
 The data (without headers) is divided by blocks. The block size can be 1024, 2048, 4096, 8192 or 16384, but the usual value is 2048.
 
 
-<a id="orgec39701"></a>
+<a id="org5163166"></a>
 
 # Plus3DOS Files
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<caption class="t-above"><span class="table-number">Table 7:</span> Header of +3DOS files.</caption>
+
+<colgroup>
+<col  class="org-right" />
+
+<col  class="org-left" />
+
+<col  class="org-right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">offset</th>
+<th scope="col" class="org-left">description</th>
+<th scope="col" class="org-right">bytes</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td class="org-right">0</td>
+<td class="org-left">+3DOS sinature</td>
+<td class="org-right">8</td>
+</tr>
+
+
+<tr>
+<td class="org-right">8</td>
+<td class="org-left">Soft EOF</td>
+<td class="org-right">1</td>
+</tr>
+
+
+<tr>
+<td class="org-right">9</td>
+<td class="org-left">Issue number</td>
+<td class="org-right">1</td>
+</tr>
+
+
+<tr>
+<td class="org-right">10</td>
+<td class="org-left">Version number</td>
+<td class="org-right">1</td>
+</tr>
+
+
+<tr>
+<td class="org-right">11</td>
+<td class="org-left">Length of file</td>
+<td class="org-right">4</td>
+</tr>
+
+
+<tr>
+<td class="org-right">15</td>
+<td class="org-left">+3 BASIC header</td>
+<td class="org-right">8</td>
+</tr>
+
+
+<tr>
+<td class="org-right">23</td>
+<td class="org-left">Reserved (set to 0)</td>
+<td class="org-right">104</td>
+</tr>
+
+
+<tr>
+<td class="org-right">127</td>
+<td class="org-left">Checksum</td>
+<td class="org-right">1</td>
+</tr>
+</tbody>
+</table>
+
+The **+3DOS signature** is an 8 byte string. Its value is &ldquo;PLUS3DOS&rdquo;. The **issue and version number** is used to check for compatibility. The correct version of the system DOS and the file DOS shoud be used.
+
+The **checksum** is calculated as follows, be $B_{i}$ the i-th byte from the header:
+
+$$(\sum_{i=0}^{127} B_{i}) \; \mathrm{mod} \; 256$$
+
+The following hexadecimal dump of a file shows the header at the first 128 (80<sub>16</sub>) bytes. The checksum specified at the 127th byte is f1. 
+
+    00000000: 504c 5553 3344 4f53 1a01 0080 1b00 0003  PLUS3DOS........
+    00000010: 001b 0040 0080 0000 0000 0000 0000 0000  ...@............
+    00000020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000050: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000060: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000070: 0000 0000 0000 0000 0000 0000 0000 00f1  ................
+    00000080: 
+
+To check the value, an Elisp code is used to calculate the checksum. The code sums all byte values (excluded several `#x00` bytes). Then, `mod` is applied with 256. The result is 241 (F1<sub>16</sub>).
+
+    (format "%x"
+            (mod
+             (+ #x50 #x4c #x55 #x53 #x33 #x44 #x4f #x53 #x1a #x01 #x00 #x80 #x1b #x00 #x00 #x03
+                #x1b #x00 #x40 #x00 #x80 )
+             256))
 
 Information about the header is at [Chapter 8 of ZX Spectrum +3 manual](https://worldofspectrum.org/ZXSpectrum128+3Manual/chapter8pt27.html).
 
 
-<a id="org71094fd"></a>
+<a id="org4eeab7e"></a>
 
 # Bibliography
 
--   "Disk image file format". CPCWiki document.
+-   &ldquo;Disk image file format&rdquo;. CPCWiki document.
     
     <https://cpctech.cpcwiki.de/docs/dsk.html>
     
     Visited April 19, 2024.
 
--   "Format:DSK disk image file format". CPCWiki article.
+-   &ldquo;Format:DSK disk image file format&rdquo;. CPCWiki article.
     
     <https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format>
     
     Visited April 19, 2024.
 
--   "Disk Structure". CPCWiki.
+-   &ldquo;Disk Structure&rdquo;. CPCWiki.
     
     <https://www.cpcwiki.eu/index.php/Disk_structure>
     

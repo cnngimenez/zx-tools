@@ -21,7 +21,7 @@ The *number conventions* are the following:
 - Sector id number starts with 1. In binary data starts with 1.
 
 ** Disk Information Block (DIB)
-The Information Block is the first structure found on a disk file. To identify it from other files, the MV String first 8 bytes can be used, which is "MV - CPC". The complete MV String is: ="MV - CPCEMU Disk-File\r\nDisk-Info\r\n"= (without ending zero char).
+The Information Block is the first structure found on a disk file. To identify it from other files, the MV String first 8 bytes can be used, which is "=MV - CPC=". The complete MV String is: "=MV - CPCEMU Disk-File\r\nDisk-Info\r\n=" (without ending zero char).
 
 The block structure is described at Table [[tab:info-block]]. Its size is 256 (100_{16}) bytes, which it starts at byte 0, and ends at byte 100_{16}
 
@@ -43,7 +43,7 @@ The disk information block is represented by the class =Disks::MV::DiskInformati
 
 ** Track information block (TIB)
 
-The *Track String* is "Track-Info\r\n\0". Comparing to the MV String of a Disk Information Block, in this case a zero character must be added to the end, to complete the field length of 13 bytes. 
+The *Track String* is "=Track-Info\r\n\0=". Comparing to the MV String of a Disk Information Block, in this case a zero character must be added to the end, to complete the field length of 13 bytes. 
 
 The *sector size* field size is 1 byte. Therefore, it is a number between 0 to 255, which it cannot specify the complete size in bytes of the sector. This byte value must be multiplied by 256 according to CPCWiki (see [[https://www.cpcwiki.eu/index.php?title=Format:DSK_disk_image_file_format&mobileaction=toggle_view_desktop][CPCWiki article]]). The usual value is 2 (512 bytes or 200_{16} bytes).
 
@@ -113,11 +113,13 @@ See the [[https://www.cpcwiki.eu/index.php/Disk_structure][Disk Structure articl
 ** St - Status value
 
 #+caption: Value of the St byte.
-|   0 |  15 | File: user number                            |
-|  16 |  31 | File: user number (P2DOS) or password extent |
-|  32 |  32 | Disk label                                   |
-|  33 |  33 | Time stamp (P2DOS)                           |
-| 229 | 229 | Erased or unused (hex: 0xE5)                 |
+| From |  To | Description                                  |
+|------+-----+----------------------------------------------|
+|    0 |  15 | File: user number                            |
+|   16 |  31 | File: user number (P2DOS) or password extent |
+|   32 |  32 | Disk label                                   |
+|   33 |  33 | Time stamp (P2DOS)                           |
+|  229 | 229 | Erased or unused (hex: 0xE5)                 |
 
 ** F0-F7 and E0-E2 - Filename
 The highest bit of the filename characters are the attribute.
@@ -162,8 +164,55 @@ The data (without headers) is divided by blocks. The block size can be 1024, 204
 
 * Plus3DOS Files
 
-Information about the header is at [[https://worldofspectrum.org/ZXSpectrum128+3Manual/chapter8pt27.html][Chapter 8 of ZX Spectrum +3 manual]].
+#+caption: Header of +3DOS files.
+| offset | description         | bytes |
+|--------+---------------------+-------|
+|      0 | +3DOS sinature      |     8 |
+|      8 | Soft EOF            |     1 |
+|      9 | Issue number        |     1 |
+|     10 | Version number      |     1 |
+|     11 | Length of file      |     4 |
+|     15 | +3 BASIC header     |     8 |
+|     23 | Reserved (set to 0) |   104 |
+|    127 | Checksum            |     1 |
 
+The *+3DOS signature* is an 8 byte string. Its value is "PLUS3DOS". The *issue and version number* is used to check for compatibility. The correct version of the system DOS and the file DOS shoud be used.
+
+The *checksum* is calculated as follows, be $B_{i}$ the i-th byte from the header:
+
+\[(\sum_{i=0}^{127} B_{i}) \; \mathrm{mod} \; 256\]
+
+
+The following hexadecimal dump of a file shows the header at the first 128 (80_{16}) bytes. The checksum specified at the 127th byte is f1. 
+
+#+caption: A +3DOS header file expressed in hexadecimal bytes.
+#+begin_src hexl-mode
+00000000: 504c 5553 3344 4f53 1a01 0080 1b00 0003  PLUS3DOS........
+00000010: 001b 0040 0080 0000 0000 0000 0000 0000  ...@............
+00000020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000050: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000060: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000070: 0000 0000 0000 0000 0000 0000 0000 00f1  ................
+00000080: 
+#+end_src
+
+To check the value, an Elisp code is used to calculate the checksum. The code sums all byte values (excluded several =#x00= bytes). Then, =mod= is applied with 256. The result is 241 (F1_{16}).
+
+#+caption: Elisp calculation example.
+#+BEGIN_SRC elisp
+  (format "%x"
+          (mod
+           (+ #x50 #x4c #x55 #x53 #x33 #x44 #x4f #x53 #x1a #x01 #x00 #x80 #x1b #x00 #x00 #x03
+              #x1b #x00 #x40 #x00 #x80 )
+           256))
+#+END_SRC
+
+#+RESULTS:
+: f1
+
+Information about the header is at [[https://worldofspectrum.org/ZXSpectrum128+3Manual/chapter8pt27.html][Chapter 8 of ZX Spectrum +3 manual]].
 * Bibliography
 
 - "Disk image file format". CPCWiki document.
@@ -199,7 +248,7 @@ Information about the header is at [[https://worldofspectrum.org/ZXSpectrum128+3
 #+STARTUP: inlineimages hidestars content hideblocks entitiespretty
 #+STARTUP: indent fninline latexpreview
 
-#+OPTIONS: H:3 num:t toc:t \n:nil @:t ::t |:t ^:{} -:t f:t *:t <:t
+#+OPTIONS: H:3 num:t toc:t \n:nil @:t ::t |:t ^:{} -:t f:t *:t <:t ':t
 #+OPTIONS: TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
 #+OPTIONS: tex:imagemagick
 
@@ -207,7 +256,7 @@ Information about the header is at [[https://worldofspectrum.org/ZXSpectrum128+3
 
 # -- Export
 #+LANGUAGE: en
-#+LINK_UP:   
+#+LINK_UP:  
 #+LINK_HOME: 
 #+EXPORT_SELECT_TAGS: export
 #+EXPORT_EXCLUDE_TAGS: noexport
@@ -228,15 +277,18 @@ Information about the header is at [[https://worldofspectrum.org/ZXSpectrum128+3
 
 
 # -- LaTeX Export
-# #+LATEX_CLASS: article
+#+latex_class: article
+#+latex_compiler: lualatex
 # -- -- Tikz
-# #+LATEX_HEADER: \usepackage{tikz}
-# #+LATEX_HEADER: \usetikzlibrary{shapes.geometric}
-# #+LATEX_HEADER: \usetikzlibrary{shapes.symbols}
-# #+LATEX_HEADER: \usetikzlibrary{positioning}
-# #+LATEX_HEADER: \usetikzlibrary{trees}
-
-# #+LATEX_HEADER_EXTRA:
+#+latex_header: \usepackage{scrextend}
+#+latex_header: \changefontsizes{14pt}
+#+latex_header: \usepackage[margin=2cm]{geometry}
+#+latex_header_extra: \usepackage{fontspec}
+#+latex_header: \defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
+#+latex_header: \setmainfont{Latin Modern Sans}
+#+latex_header: \renewcommand{\baselinestretch}{1.25}
+#+latex_header_extra: \hypersetup{colorlinks}
+#+latex_header_extra: \usepackage{emoji}
 
 # --  Info Export
 #+TEXINFO_DIR_CATEGORY: zx-tools
